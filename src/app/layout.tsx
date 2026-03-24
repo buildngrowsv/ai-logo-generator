@@ -18,35 +18,48 @@
  */
 
 import type { Metadata } from "next";
-import { PRODUCT_CONFIG } from "@/lib/config";
 import { AuthSessionProvider } from "@/components/AuthSessionProvider";
 import "./globals.css";
 
 /**
- * Dynamic metadata generated from PRODUCT_CONFIG.
- * WHY: By deriving metadata from config, cloning a new product automatically
- * updates all SEO tags. No need to manually edit layout.tsx for each clone.
+ * Hardcoded SEO metadata for LogoMint AI.
+ *
+ * WHY HARDCODED (not PRODUCT_CONFIG template strings):
+ * The PRODUCT_CONFIG-based template approach generates generic titles like
+ * "LogoMint AI — Create professional logos in seconds with AI" which are less
+ * specific than keyword-rich titles that perform better in search. Hardcoded
+ * titles let us pack in high-volume keywords ("AI Logo Generator", "LogoMint")
+ * while keeping the template strings approach for less SEO-critical clones.
+ *
+ * Updated 2026-03-24 as part of SEO rollout across all clone apps.
  */
 export const metadata: Metadata = {
-  title: {
-    default: `${PRODUCT_CONFIG.name} — ${PRODUCT_CONFIG.tagline}`,
-    template: `%s | ${PRODUCT_CONFIG.name}`,
-  },
-  description: PRODUCT_CONFIG.description,
+  title: "AI Logo Generator | LogoMint — Create Professional Logos in Seconds",
+  description:
+    "Generate stunning logos, wordmarks, and brand marks with AI. Choose your style, enter your brand name, and get a professional logo instantly. Free to try — no design skills needed.",
+  keywords: [
+    "AI logo generator",
+    "logo maker AI",
+    "AI logo design",
+    "brand logo generator",
+    "business logo creator",
+    "free logo generator",
+    "AI logo maker online",
+    "professional logo design AI",
+  ],
   openGraph: {
-    title: PRODUCT_CONFIG.name,
-    description: PRODUCT_CONFIG.description,
+    title: "AI Logo Generator | LogoMint — Professional Logos in Seconds",
+    description:
+      "Generate stunning logos with AI. Enter your brand name, pick a style, download instantly.",
     type: "website",
+    siteName: "LogoMint AI",
   },
-  /**
-   * Twitter card meta — uses the large image format for maximum visibility
-   * in Twitter/X feeds. Added 2026-03-24 as part of SEO rollout (Scout 15).
-   */
   twitter: {
     card: "summary_large_image",
-    title: PRODUCT_CONFIG.name,
-    description: PRODUCT_CONFIG.description,
+    title: "AI Logo Generator — Professional Logos in Seconds",
+    description: "Create stunning logos with AI. Free to try.",
   },
+  robots: { index: true, follow: true },
 };
 
 /**

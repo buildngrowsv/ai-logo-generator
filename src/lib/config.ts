@@ -107,10 +107,10 @@ export interface ProductConfiguration {
  * 3. Keeping it in code means it's version-controlled and auditable
  */
 export const PRODUCT_CONFIG: ProductConfiguration = {
-  name: "AI Tool Name",
-  tagline: "Transform your images with one click",
+  name: "LogoMint AI",
+  tagline: "Create professional logos in seconds with AI",
   description:
-    "Professional-grade AI processing in seconds. No design skills needed. Upload, process, download.",
+    "Generate stunning logos, wordmarks, and brand marks with AI. Choose your style, enter your brand name, and get a professional logo instantly. Free to try — no design skills needed.",
   falModelIdentifier: "fal-ai/birefnet",
   inputType: "image",
   pricing: {
