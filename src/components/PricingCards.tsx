@@ -67,7 +67,10 @@ const TIER_FEATURES = {
  * If we need to change the card layout, we change it once here.
  */
 function PricingCard({
-  tierName,
+  // tierName is passed by callers for data-attribute identification but not
+  // rendered visually — tierDisplayName is shown in the UI instead.
+  // Destructured as _tierName to satisfy ESLint no-unused-vars.
+  tierName: _tierName,
   tierDisplayName,
   pricePerMonth,
   features,
