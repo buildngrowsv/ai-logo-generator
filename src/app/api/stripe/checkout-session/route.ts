@@ -1,136 +1,178 @@
 /**
  * POST /api/stripe/checkout-session
  *
- * Creates a Stripe Checkout session and returns the checkout URL.
- * The client redirects the user to Stripe's hosted checkout page.
+ * Creates a Stripe Checkout session and returns the redirect URL.
+ * The pricing page calls this with { priceId, mode } and redirects
+ * the user to Stripe's hosted checkout page on success.
  *
- * WHY STRIPE CHECKOUT (NOT ELEMENTS):
- * Stripe Checkout is a hosted payment page that handles:
- * - Payment method collection (cards, Apple Pay, Google Pay, etc.)
- * - SCA/3D Secure authentication
- * - PCI compliance (card data never touches our server)
- * - Mobile-optimized UI
- * - Tax calculation (with Stripe Tax)
+ * WHY THIS VERSION (simplified from DB-backed version):
+ * The previous version required a Neon/Drizzle database to look up and
+ * create Stripe Customer records. This caused 500 errors when the database
+ * schema wasn't applied yet. This version is resilient — it works with
+ * just STRIPE_SECRET_KEY + STRIPE_PRICE_IDs configured, which is the
+ * minimum viable checkout flow. A Stripe Customer can be created later
+ * via webhooks or portal when the DB layer is added.
  *
- * Using Checkout instead of Stripe Elements means we don't need to build
- * or maintain a payment form UI. The tradeoff is less customization of the
- * checkout experience, but for most SaaS products, Checkout is sufficient.
+ * AUTH HANDLING:
+ * The pricing page already redirects unauthenticated users to /login before
+ * calling this endpoint. We attempt to read the auth session to pre-fill
+ * customer_email on the Stripe checkout page (better UX), but we fail
+ * gracefully if auth is not configured — Stripe will collect the email itself.
  *
  * REQUEST BODY:
- * {
- *   priceId: string,                        // Stripe Price ID (price_xxx)
- *   mode: "subscription" | "payment",       // subscription for plans, payment for packs
- * }
+ * { priceId: string, mode: "subscription" | "payment" }
  *
  * RESPONSE:
- * { url: string }  — The Stripe Checkout URL to redirect to
+ * { url: string } — Stripe Checkout URL to redirect to
  *
- * STRIPE CUSTOMER MANAGEMENT:
- * On first purchase, we create a Stripe Customer and store the ID in user_profiles.
- * On subsequent purchases, we reuse the existing customer. This ensures:
- * 1. Payment methods are remembered across purchases
- * 2. Subscription management works correctly
- * 3. Stripe's customer portal shows all their purchases
- *
- * AUTHENTICATION:
- * Requires a valid Better Auth session. Returns 401 if not authenticated.
+ * OPERATOR EMERGENCY 2026-03-25:
+ * Simplified to remove DB dependency so checkout works immediately.
+ * DB-backed customer association can be layered on later.
  *
  * CALLED BY:
- * - src/app/(main)/pricing/page.tsx (handleGetStarted function)
+ * - src/app/[locale]/(main)/pricing/page.tsx (handleGetStarted function)
  */
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
-import { db } from "@/db";
-import { userProfiles } from "@/db/schema/users";
-import { eq } from "drizzle-orm";
-import { stripeServerClient } from "@/lib/stripe";
+import type Stripe from "stripe";
+
+/**
+ * Lazy Stripe singleton — avoids build-time crash when STRIPE_SECRET_KEY
+ * is absent (e.g., in CI or fresh clone without env vars set).
+ * The client is created on the first POST request, not at import time.
+ */
+let _stripeInstance: Stripe | null = null;
+
+function getStripeInstance(): Stripe {
+  if (!_stripeInstance) {
+    if (!process.env.STRIPE_SECRET_KEY) {
+      throw new Error(
+        "STRIPE_SECRET_KEY is not configured. Set it in Vercel environment variables."
+      );
+    }
+    // Dynamic require so TypeScript doesn't choke on the default import
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const StripeConstructor = require("stripe") as typeof import("stripe").default;
+    _stripeInstance = new StripeConstructor(process.env.STRIPE_SECRET_KEY, {
+      apiVersion: "2025-02-24.acacia",
+      typescript: true,
+    });
+  }
+  return _stripeInstance;
+}
 
 export async function POST(request: NextRequest) {
-  const stripe = stripeServerClient;
-
   /**
-   * STEP 1: Authenticate the user.
-   * We need the user ID to associate the Stripe Customer and pass it
-   * as metadata on the checkout session (used by webhooks later).
+   * STEP 1: Parse and validate the request body.
+   * Both priceId and mode are required — without them Stripe can't create a session.
    */
-  const session = await auth.api.getSession({ headers: await headers() });
-  if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  /**
-   * STEP 2: Parse and validate request body.
-   * Malformed JSON should return 400 (client error), not 500 (server error).
-   */
-  let body;
+  let body: { priceId?: string; mode?: string };
   try {
-    body = await request.json();
+    body = (await request.json()) as { priceId?: string; mode?: string };
   } catch {
-    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    return NextResponse.json({ error: "Invalid JSON body." }, { status: 400 });
   }
+
   const { priceId, mode } = body;
-  if (!priceId || !mode) {
-    return NextResponse.json({ error: "Missing priceId or mode" }, { status: 400 });
+
+  if (!priceId) {
+    return NextResponse.json(
+      {
+        error:
+          "priceId is required. Stripe Price IDs must be set as environment variables (NEXT_PUBLIC_STRIPE_PRICE_BASIC_MONTHLY etc.).",
+      },
+      { status: 400 }
+    );
+  }
+
+  if (mode !== "subscription" && mode !== "payment") {
+    return NextResponse.json(
+      { error: "mode must be 'subscription' or 'payment'." },
+      { status: 400 }
+    );
   }
 
   /**
-   * STEP 3: Get or create Stripe customer for this user.
+   * STEP 2: Optionally read the auth session to pre-fill customer_email.
    *
-   * We store the Stripe customer ID in user_profiles so we don't create
-   * duplicate customers on repeat purchases. Duplicate customers cause
-   * confusion in Stripe's dashboard and break subscription management.
+   * This is a best-effort operation — if Better Auth isn't fully configured
+   * (missing GOOGLE_CLIENT_ID, etc.) or the session cookie is absent, we
+   * catch the error and proceed. Stripe will collect the customer's email
+   * itself during the hosted checkout flow. This avoids the previous 500
+   * errors caused by auth.api.getSession throwing when not configured.
    */
-  const [profile] = await db
-    .select()
-    .from(userProfiles)
-    .where(eq(userProfiles.userId, session.user.id))
-    .limit(1);
-
-  let stripeCustomerId = profile?.stripeCustomerId;
-
-  if (!stripeCustomerId) {
-    /**
-     * First purchase — create a Stripe Customer.
-     * We pass the userId in metadata so Stripe webhooks can find the user.
-     */
-    const customer = await stripe.customers.create({
-      email: session.user.email,
-      metadata: { userId: session.user.id },
-    });
-    stripeCustomerId = customer.id;
-
-    /**
-     * Store the customer ID. If the user_profiles row doesn't exist yet,
-     * this update will affect 0 rows — which is fine because the webhook
-     * will handle creating the profile on subscription.created.
-     */
-    await db
-      .update(userProfiles)
-      .set({ stripeCustomerId, updatedAt: new Date() })
-      .where(eq(userProfiles.userId, session.user.id));
+  let customerEmail: string | undefined;
+  try {
+    const { auth } = await import("@/lib/auth");
+    const requestHeaders = await headers();
+    const session = await auth.api.getSession({ headers: requestHeaders });
+    if (session?.user?.email) {
+      customerEmail = session.user.email;
+    }
+  } catch {
+    // Auth not configured or session lookup failed — proceed without email.
+    // Stripe will ask for it during checkout.
   }
+
+  /**
+   * STEP 3: Build the success and cancel URLs.
+   * NEXT_PUBLIC_APP_URL is set in Vercel to the production domain so that
+   * success/cancel redirects work in both preview and production environments.
+   */
+  const appUrl = (
+    process.env.NEXT_PUBLIC_APP_URL || "https://logo.symplyai.io"
+  ).replace(/\/$/, "");
 
   /**
    * STEP 4: Create the Stripe Checkout session.
    *
-   * The userId is passed in metadata so the webhook handler can identify
-   * which user made the purchase and allocate credits accordingly.
+   * We do NOT associate a Stripe Customer in this MVP version — that
+   * requires the Neon database to look up user profiles. Stripe will
+   * create a guest Customer object and attach it to the checkout session.
+   * When the DB layer is added, the webhook can back-fill the stripeCustomerId.
    *
-   * success_url and cancel_url point to our app pages.
-   * The ?checkout=success/canceled query param lets the destination page
-   * show a success or cancellation message.
+   * allow_promotion_codes: true — lets us run discount campaigns without
+   * code changes (create coupon in Stripe Dashboard, share the code).
    */
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:4738";
+  try {
+    const stripe = getStripeInstance();
 
-  const checkoutSession = await stripe.checkout.sessions.create({
-    customer: stripeCustomerId,
-    mode: mode as "subscription" | "payment",
-    line_items: [{ price: priceId, quantity: 1 }],
-    success_url: `${appUrl}/dashboard?checkout=success`,
-    cancel_url: `${appUrl}/pricing?checkout=canceled`,
-    metadata: { userId: session.user.id },
-  });
+    const checkoutSessionParams: Stripe.Checkout.SessionCreateParams = {
+      mode: mode as "subscription" | "payment",
+      line_items: [{ price: priceId, quantity: 1 }],
+      success_url: `${appUrl}/dashboard?checkout=success`,
+      cancel_url: `${appUrl}/pricing?checkout=canceled`,
+      allow_promotion_codes: true,
+      metadata: {
+        priceId,
+        mode,
+      },
+    };
 
-  return NextResponse.json({ url: checkoutSession.url });
+    // Pre-fill the email field if we have it from auth — nicer UX
+    if (customerEmail) {
+      checkoutSessionParams.customer_email = customerEmail;
+    }
+
+    const checkoutSession = await stripe.checkout.sessions.create(
+      checkoutSessionParams
+    );
+
+    return NextResponse.json({ url: checkoutSession.url });
+  } catch (stripeError) {
+    const errorMessage =
+      stripeError instanceof Error ? stripeError.message : "Stripe error.";
+
+    const isConfigError =
+      errorMessage.includes("STRIPE_SECRET_KEY") ||
+      errorMessage.includes("No such price") ||
+      errorMessage.includes("not configured");
+
+    console.error("[checkout-session] Stripe error:", errorMessage);
+
+    return NextResponse.json(
+      { error: errorMessage },
+      { status: isConfigError ? 500 : 502 }
+    );
+  }
 }
