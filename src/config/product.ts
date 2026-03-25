@@ -297,6 +297,42 @@ export const TESTIMONIALS = [
   },
 ] as const;
 
+/**
+ * STRIPE PRICE ID LOOKUP MAP — static literal access required by Next.js.
+ *
+ * WHY THIS MAP EXISTS (root cause, 2026-03-25, Builder 6):
+ * Next.js performs static string replacement on `process.env.NEXT_PUBLIC_*`
+ * ONLY when accessed as a literal string at build time. Dynamic bracket
+ * notation like `process.env[envKey]` is NOT replaced — the variable
+ * evaluates to `undefined` in the browser bundle, silently breaking checkout.
+ * This was the same bug fixed in banananano2pro (getStripePriceId commit
+ * 8e090ff). The fix: use literal access in a static map, then look up by key.
+ *
+ * TRAILING \n STRIPPING (root cause, 2026-03-25, Builder 6):
+ * All NEXT_PUBLIC_STRIPE_PRICE_* env vars on Vercel were set via
+ * `echo "price_..." | vercel env add ...` which appends a trailing \n to the
+ * value. Without .trim(), the price ID becomes e.g. "price_xxx\n" and Stripe
+ * returns "No such price" error. The .trim() here is the defense layer on the
+ * code side; the env vars on Vercel should also be re-set without \n.
+ *
+ * USED BY:
+ * - src/app/[locale]/(main)/pricing/page.tsx (getStripePriceId call per plan/pack)
+ */
+const STRIPE_PRICE_ENV_MAP: Record<string, string | undefined> = {
+  NEXT_PUBLIC_STRIPE_PRICE_BASIC_MONTHLY:
+    process.env.NEXT_PUBLIC_STRIPE_PRICE_BASIC_MONTHLY?.trim(),
+  NEXT_PUBLIC_STRIPE_PRICE_STANDARD_MONTHLY:
+    process.env.NEXT_PUBLIC_STRIPE_PRICE_STANDARD_MONTHLY?.trim(),
+  NEXT_PUBLIC_STRIPE_PRICE_PRO_MONTHLY:
+    process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_MONTHLY?.trim(),
+  NEXT_PUBLIC_STRIPE_PRICE_STARTER_PACK:
+    process.env.NEXT_PUBLIC_STRIPE_PRICE_STARTER_PACK?.trim(),
+  NEXT_PUBLIC_STRIPE_PRICE_GROWTH_PACK:
+    process.env.NEXT_PUBLIC_STRIPE_PRICE_GROWTH_PACK?.trim(),
+  NEXT_PUBLIC_STRIPE_PRICE_PROFESSIONAL_PACK:
+    process.env.NEXT_PUBLIC_STRIPE_PRICE_PROFESSIONAL_PACK?.trim(),
+};
+
 export function getStripePriceId(envKey: string): string | undefined {
-  return process.env[envKey];
+  return STRIPE_PRICE_ENV_MAP[envKey];
 }

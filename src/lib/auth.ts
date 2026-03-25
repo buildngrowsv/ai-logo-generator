@@ -83,7 +83,13 @@ export function getAuth() {
        * Better Auth uses this to construct redirect URIs for OAuth providers.
        * In production, this should be your domain (e.g., https://logoforgeai.com).
        */
-      baseURL: process.env.BETTER_AUTH_URL || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:4738",
+      /**
+       * Trim trailing whitespace/newlines from baseURL env vars.
+       * Some env vars were set via echo pipe which adds a trailing \n,
+       * causing Better Auth to fail with "Invalid URL" during prerender.
+       * Same root cause fixed in banananano2pro (commit 8e090ff, 2026-03-25).
+       */
+      baseURL: (process.env.BETTER_AUTH_URL || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:4738").trim(),
 
       /**
        * OAuth providers — Google only for launch.
