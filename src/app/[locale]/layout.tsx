@@ -10,6 +10,7 @@ import { getMessages, getTranslations, setRequestLocale } from "next-intl/server
 import { notFound } from "next/navigation";
 import { AuthSessionProvider } from "@/components/AuthSessionProvider";
 import { routing } from "@/i18n/routing";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { siteConfig } from "@/config/site";
 import "../globals.css";
 
@@ -129,7 +130,11 @@ export default async function LocaleLayout({ children, params }: Props) {
       </head>
       <body className="min-h-screen antialiased">
         <AuthSessionProvider>
-          <NextIntlClientProvider messages={messages}>{children}</NextIntlClientProvider>
+          <NextIntlClientProvider messages={messages}>
+            {/* Language switcher — EN | ES toggle, visible on all pages */}
+            <LanguageSwitcher locale={locale} />
+            {children}
+          </NextIntlClientProvider>
         </AuthSessionProvider>
       </body>
     </html>
