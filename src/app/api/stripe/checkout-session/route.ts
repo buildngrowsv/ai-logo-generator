@@ -35,31 +35,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { headers } from "next/headers";
 import type Stripe from "stripe";
-
-/**
- * Lazy Stripe singleton — avoids build-time crash when STRIPE_SECRET_KEY
- * is absent (e.g., in CI or fresh clone without env vars set).
- * The client is created on the first POST request, not at import time.
- */
-let _stripeInstance: Stripe | null = null;
-
-function getStripeInstance(): Stripe {
-  if (!_stripeInstance) {
-    if (!process.env.STRIPE_SECRET_KEY) {
-      throw new Error(
-        "STRIPE_SECRET_KEY is not configured. Set it in Vercel environment variables."
-      );
-    }
-    // Dynamic require so TypeScript doesn't choke on the default import
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const StripeConstructor = require("stripe") as typeof import("stripe").default;
-    _stripeInstance = new StripeConstructor(process.env.STRIPE_SECRET_KEY, {
-      apiVersion: "2025-02-24.acacia",
-      typescript: true,
-    });
-  }
-  return _stripeInstance;
-}
+import { getStripeClient } from "@/lib/stripe";
 
 export async function POST(request: NextRequest) {
   /**
@@ -135,7 +111,7 @@ export async function POST(request: NextRequest) {
    * code changes (create coupon in Stripe Dashboard, share the code).
    */
   try {
-    const stripe = getStripeInstance();
+    const stripe = getStripeClient();
 
     const checkoutSessionParams: Stripe.Checkout.SessionCreateParams = {
       mode: mode as "subscription" | "payment",

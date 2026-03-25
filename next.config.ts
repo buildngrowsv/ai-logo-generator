@@ -60,6 +60,17 @@ const nextConfig: NextConfig = {
   },
 
   /**
+   * Mark Stripe as a server-external package so Next.js 15 doesn't try to
+   * webpack-bundle it. Stripe SDK v17 uses CommonJS modules that webpack
+   * stubs incorrectly (net, tls, http2 Node.js internals), causing
+   * "TypeError: Cannot read properties of undefined" at build time and
+   * StripeConnectionError at runtime when the bundled HTTP client fails.
+   * Marking it external forces Node.js native require() at runtime instead.
+   * This is the canonical fix for Stripe + Next.js 15.
+   */
+  serverExternalPackages: ["stripe"],
+
+  /**
    * Enable server actions — used by our Stripe checkout and generation API
    * routes that need to run server-side logic triggered from client components.
    */
