@@ -1,6 +1,6 @@
 # LogoForge AI — AI Logo Generator — STATUS
 
-**Last updated:** 2026-03-25 (Builder 6, T021-04 — auth 500→401 fix)
+**Last updated:** 2026-03-25 (Builder 6, d82046a5 — IP rate limiting added to generate route)
 **Repo:** github.com/buildngrowsv/ai-logo-generator
 **Stack:** Next.js 15 + fal.ai FLUX + Stripe + Better Auth + Drizzle/Neon + Tailwind 4
 
@@ -15,7 +15,7 @@
 |-----------|--------|-------|
 | Landing page | DONE ✅ | Marketing-polished, LogoForge AI branding, unique SEO |
 | Core tool component | DONE ✅ | Business name + style prompt → FLUX logo generation |
-| API route (/api/generate) | DONE ✅ | Server-side fal.ai proxy, auth-gated (401 without session) |
+| API route (/api/generate) | DONE ✅ | Server-side fal.ai proxy, IP rate-limited (5/day/IP, 429) + auth-gated (401 without session) |
 | Stripe checkout endpoint | DONE ✅ | POST /api/stripe/checkout-session — verified returns cs_live_ URL |
 | Stripe price IDs | DONE ✅ | 3 subs + 3 packs — all set on Vercel production |
 | getStripePriceId fix | DONE ✅ | Static STRIPE_PRICE_ENV_MAP with literal access + .trim() (commit ddec3c6) |
@@ -53,7 +53,7 @@
 - Pricing page renders with real price IDs ✅ (3 subs + 3 packs configured)
 - POST /api/stripe/checkout-session → returns real cs_live_ Stripe checkout URL ✅ (verified 2026-03-25)
 - POST /api/stripe/webhook → correctly rejects missing/invalid signatures ✅
-- POST /api/logo/generate → returns 401 for unauthenticated users ✅ (auth-gated, DATABASE_URL error no longer leaks as 500)
+- POST /api/logo/generate → IP rate limit (5/day/IP) fires first → 429 after quota ✅; then auth gate → 401 for unauthenticated ✅
 - Credit deduction: ⚠️ TODO — credits not actually deducted (requires DATABASE_URL)
 
 ## What Requires BCL/Dashboard Work
