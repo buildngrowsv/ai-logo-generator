@@ -104,9 +104,15 @@ export async function POST(request: NextRequest) {
   /**
    * STEP 3: Build the success and cancel URLs.
    */
+  // Strip literal \n and trailing slashes — some env vars were set with
+  // a trailing \n by a previous builder, which causes "Not a valid URL" from Stripe.
   const appUrl = (
     process.env.NEXT_PUBLIC_APP_URL || "https://logo.symplyai.io"
-  ).replace(/\/$/, "");
+  )
+    .replace(/\\n/g, "")
+    .replace(/\n/g, "")
+    .replace(/\/$/, "")
+    .trim();
 
   /**
    * STEP 4: Create the Stripe Checkout session via raw fetch.
