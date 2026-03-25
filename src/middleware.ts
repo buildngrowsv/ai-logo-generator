@@ -1,48 +1,25 @@
 /**
- * Next.js middleware — route protection for authenticated pages.
+ * Composed middleware — next-intl locale routing + Better Auth cookie gate.
  *
- * HOW IT WORKS:
- * This middleware runs on every request (except static files). It checks if the
- * requested route requires authentication. If it does and the user doesn't have
- * a valid session cookie, they're redirected to the login page.
- *
- * WHY MIDDLEWARE (NOT SERVER COMPONENTS):
- * Middleware runs at the edge before the page even starts rendering. This means:
- * 1. Unauthorized users never see a flash of the protected page
- * 2. The redirect happens instantly (no SSR latency)
- * 3. We don't waste server resources rendering a page the user can't access
- *
- * SESSION CHECK STRATEGY:
- * We check for the Better Auth session cookie existence as a fast gate.
- * This is a LIGHTWEIGHT check — the cookie's mere presence doesn't guarantee
- * the session is still valid (it could be expired). The REAL auth validation
- * happens server-side in API routes via auth.api.getSession().
- *
- * This two-layer approach is intentional:
- * - Middleware: fast cookie check → redirect if no cookie (catches 99% of unauth requests)
- * - API routes: full session validation → return 401 if session is expired/invalid
- *
- * CUSTOMIZATION:
- * Add your public routes to the PUBLIC_PATHS array. Any route not matching
- * a public path requires a session cookie to access.
- *
- * REDIRECT BEHAVIOR:
- * When redirecting to login, the original path is passed as a ?redirect query param.
- * The login page reads this and redirects back after successful auth, so the user
- * lands on the page they originally wanted.
+ * Order: skip `/api` entirely (APIs do their own auth). Run intl for pages.
+ * Then strip `/es` prefix mentally to match legacy PUBLIC_PATHS from the
+ * pre-i18n middleware (Builder 25, pane1774 T13).
  */
+import createMiddleware from "next-intl/middleware";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { routing } from "./i18n/routing";
 
-/**
- * Routes that don't require authentication.
- * Includes the landing page, pricing, legal pages, and API endpoints
- * that need to be publicly accessible (auth callbacks, Stripe webhooks).
- *
- * IMPORTANT: The /api/auth path must be public — it handles OAuth callbacks
- * that happen before the user has a session. The /api/stripe/webhook path
- * must be public because Stripe sends events directly (no user session).
- */
+const intlMiddleware = createMiddleware(routing);
+
+function stripLocalePrefix(pathname: string): string {
+  if (pathname === "/es" || pathname.startsWith("/es/")) {
+    const rest = pathname === "/es" ? "" : pathname.slice(3);
+    return rest === "" ? "/" : rest;
+  }
+  return pathname;
+}
+
 const PUBLIC_PATHS = [
   "/",
   "/pricing",
@@ -50,58 +27,66 @@ const PUBLIC_PATHS = [
   "/about",
   "/privacy-policy",
   "/terms-of-service",
-  "/api/auth",
-  "/api/stripe/webhook",
+  "/refund-policy",
+  "/gallery",
 ];
 
-export function middleware(request: NextRequest) {
+function isPublicPath(strippedPathname: string): boolean {
+  if (strippedPathname.startsWith("/api/auth") || strippedPathname.startsWith("/api/stripe/webhook")) {
+    return true;
+  }
+  return PUBLIC_PATHS.some(
+    (publicPath) => strippedPathname === publicPath || strippedPathname.startsWith(`${publicPath}/`),
+  );
+}
+
+function isStaticAssetPath(pathname: string): boolean {
+  return (
+    pathname.startsWith("/_next") ||
+    pathname.startsWith("/_vercel") ||
+    pathname.startsWith("/icons") ||
+    /\.[a-zA-Z0-9]+$/.test(pathname.split("/").pop() ?? "")
+  );
+}
+
+export default function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  /**
-   * Allow public paths and static assets through without auth check.
-   * Static assets include: /_next (Next.js internals), /icons, and any
-   * file with an extension (images, fonts, etc.).
-   */
-  if (
-    PUBLIC_PATHS.some((p) => pathname.startsWith(p)) ||
-    pathname.startsWith("/_next") ||
-    pathname.startsWith("/icons") ||
-    pathname.includes(".")
-  ) {
+  if (pathname.startsWith("/api")) {
     return NextResponse.next();
   }
 
-  /**
-   * Check for Better Auth session cookie.
-   *
-   * Better Auth uses "better-auth.session_token" by default.
-   * On HTTPS (production), the cookie is prefixed with "__Secure-" by the browser.
-   * We check both variants to handle both development (HTTP) and production (HTTPS).
-   */
+  if (isStaticAssetPath(pathname)) {
+    return NextResponse.next();
+  }
+
+  const intlResponse = intlMiddleware(request);
+
+  if (intlResponse.status >= 300 && intlResponse.status < 400) {
+    return intlResponse;
+  }
+
+  const stripped = stripLocalePrefix(request.nextUrl.pathname);
+
+  if (isPublicPath(stripped)) {
+    return intlResponse;
+  }
+
   const sessionCookie =
     request.cookies.get("better-auth.session_token") ||
     request.cookies.get("__Secure-better-auth.session_token");
 
   if (!sessionCookie) {
-    /**
-     * No session cookie → redirect to login with the original path.
-     * The login page reads ?redirect and sends the user back after auth.
-     */
-    const loginUrl = new URL("/login", request.url);
+    const usesSpanishLocale = pathname === "/es" || pathname.startsWith("/es/");
+    const loginPath = usesSpanishLocale ? "/es/login" : "/login";
+    const loginUrl = new URL(loginPath, request.url);
     loginUrl.searchParams.set("redirect", pathname);
     return NextResponse.redirect(loginUrl);
   }
 
-  return NextResponse.next();
+  return intlResponse;
 }
 
 export const config = {
-  matcher: [
-    /**
-     * Match all routes except static files and _next internals.
-     * This ensures the middleware runs on page navigations and API calls.
-     * The negative lookahead excludes Next.js internal routes and favicon.
-     */
-    "/((?!_next/static|_next/image|favicon.ico).*)",
-  ],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
 };

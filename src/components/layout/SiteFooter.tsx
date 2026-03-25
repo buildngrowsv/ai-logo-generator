@@ -13,7 +13,7 @@
  * IMPORTED BY:
  * - src/app/(main)/layout.tsx (wraps all main pages)
  */
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { siteConfig } from "@/config/site";
 
 export function SiteFooter() {

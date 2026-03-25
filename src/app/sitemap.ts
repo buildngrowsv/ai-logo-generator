@@ -18,16 +18,31 @@
  */
 
 import type { MetadataRoute } from "next";
+import { siteConfig } from "@/config/site";
 
-const BASE_URL = "https://ai-logo-generator.vercel.app";
+const BASE_URL = siteConfig.siteUrl.replace(/\/$/, "");
 
+/**
+ * Includes Spanish locale URLs for hreflang coverage (Builder 25, T13).
+ */
 export default function sitemap(): MetadataRoute.Sitemap {
-  return [
-    {
-      url: BASE_URL,
-      lastModified: new Date(),
+  const lastModified = new Date();
+  const paths = ["", "/pricing", "/login", "/gallery"];
+  const entries: MetadataRoute.Sitemap = [];
+  for (const path of paths) {
+    entries.push({
+      url: `${BASE_URL}${path}`,
+      lastModified,
       changeFrequency: "weekly",
-      priority: 1.0,
-    },
-  ];
+      priority: path === "" ? 1.0 : 0.85,
+      alternates: { languages: { en: `${BASE_URL}${path}`, es: `${BASE_URL}/es${path || ""}` } },
+    });
+    entries.push({
+      url: `${BASE_URL}/es${path || ""}`,
+      lastModified,
+      changeFrequency: "weekly",
+      priority: path === "" ? 0.95 : 0.8,
+    });
+  }
+  return entries;
 }

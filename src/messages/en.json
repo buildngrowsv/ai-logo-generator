@@ -1,0 +1,49 @@
+{
+  "Meta": {
+    "title": "AI Logo Generator | LogoForge AI — Professional Logos in Seconds",
+    "description": "Create stunning professional logos in seconds with AI. Enter your business name, pick a style, and get unlimited logo variations. Free to try.",
+    "keywordList": [
+      "AI logo generator",
+      "logo maker AI",
+      "AI logo design",
+      "brand logo generator",
+      "business logo creator",
+      "free logo generator",
+      "AI logo maker online",
+      "professional logo design AI"
+    ],
+    "ogTitle": "AI Logo Generator | LogoForge AI",
+    "ogDescription": "Generate logos with AI. Pick a style, enter your brand name, download instantly.",
+    "siteName": "LogoForge AI",
+    "twitterTitle": "AI Logo Generator — LogoForge AI",
+    "twitterDescription": "Create stunning logos with AI. Free to try."
+  },
+  "Nav": {
+    "studio": "Create Logo",
+    "gallery": "Gallery",
+    "pricing": "Pricing",
+    "dashboard": "Dashboard",
+    "signIn": "Sign in",
+    "signOut": "Sign out",
+    "account": "Account"
+  },
+  "Home": {
+    "siteDescription": "Create stunning professional logos in seconds with AI. Enter your business name, pick a style, and get unlimited logo variations.",
+    "getStarted": "Get Started",
+    "viewPricing": "View Pricing",
+    "whyChoose": "Why choose {name}",
+    "builtForSpeed": "Built for speed, security, and scale.",
+    "everythingTitle": "Everything you need",
+    "everythingSubtitle": "Production-ready infrastructure so you can focus on your product.",
+    "pricingTitle": "Simple, transparent pricing",
+    "pricingSubtitle": "Choose a plan that fits your needs.",
+    "popular": "Popular",
+    "creditsMo": "credits/mo",
+    "viewDetails": "View details",
+    "seeFullPricing": "See full pricing and credit packs →",
+    "faqTitle": "Frequently asked questions",
+    "finalTitle": "Ready to get started?",
+    "finalSubtitle": "Sign up in seconds. No credit card required.",
+    "getStartedFree": "Get Started Free"
+  }
+}

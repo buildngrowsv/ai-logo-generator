@@ -27,7 +27,7 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { authClient } from "@/lib/auth-client";
 import { siteConfig } from "@/config/site";
 

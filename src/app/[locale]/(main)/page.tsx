@@ -28,7 +28,8 @@
  */
 "use client";
 
-import Link from "next/link";
+import { useMessages, useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -48,6 +49,12 @@ import {
   Code,
   TrendingUp,
   Star,
+  Wand2,
+  Palette,
+  Layers,
+  Download,
+  Sparkles,
+  ShieldCheck,
 } from "lucide-react";
 import { siteConfig } from "@/config/site";
 import {
@@ -68,10 +75,37 @@ import {
  * in the config and resolve them here in the client component.
  */
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
-  Zap, Shield, CreditCard, Database, Cloud, Coins, Rocket, Code, TrendingUp,
+  Zap,
+  Shield,
+  CreditCard,
+  Database,
+  Cloud,
+  Coins,
+  Rocket,
+  Code,
+  TrendingUp,
+  Wand2,
+  Palette,
+  Layers,
+  Download,
+  Sparkles,
+  ShieldCheck,
+};
+
+type HomeMessageOverrides = {
+  valueProps?: typeof VALUE_PROPOSITIONS;
+  features?: typeof PRODUCT_FEATURES;
+  faqItems?: typeof FAQ_ITEMS;
+  planCopy?: Record<string, { name: string; description: string }>;
 };
 
 export default function HomePage() {
+  const t = useTranslations("Home");
+  const messages = useMessages() as { Home?: HomeMessageOverrides };
+  const valuePropsList = messages.Home?.valueProps ?? VALUE_PROPOSITIONS;
+  const featuresList = messages.Home?.features ?? PRODUCT_FEATURES;
+  const faqItemsList = messages.Home?.faqItems ?? FAQ_ITEMS;
+  const planCopyById = messages.Home?.planCopy;
   const colors = siteConfig.themeColors;
 
   return (
@@ -90,19 +124,17 @@ export default function HomePage() {
                 {siteConfig.siteName}
               </span>
             </h1>
-            <p className="mt-6 text-lg text-muted-foreground sm:text-xl">
-              {siteConfig.siteDescription}
-            </p>
+            <p className="mt-6 text-lg text-muted-foreground sm:text-xl">{t("siteDescription")}</p>
             <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
               <Button
                 asChild
                 size="lg"
                 className={`min-w-[160px] bg-gradient-to-r ${colors.gradientFrom} ${colors.gradientTo} ${colors.gradientFromHover} ${colors.gradientToHover}`}
               >
-                <Link href="/login">Get Started</Link>
+                <Link href="/login">{t("getStarted")}</Link>
               </Button>
               <Button asChild variant="outline" size="lg" className="min-w-[160px]">
-                <Link href="/pricing">View Pricing</Link>
+                <Link href="/pricing">{t("viewPricing")}</Link>
               </Button>
             </div>
           </div>
@@ -117,13 +149,11 @@ export default function HomePage() {
       <section className="border-b border-border/40 bg-muted/20 py-20">
         <div className="container mx-auto max-w-6xl px-4">
           <h2 className="text-center text-3xl font-bold tracking-tight sm:text-4xl">
-            Why choose {siteConfig.siteName}
+            {t("whyChoose", { name: siteConfig.siteName })}
           </h2>
-          <p className="mx-auto mt-4 max-w-2xl text-center text-muted-foreground">
-            Built for speed, security, and scale.
-          </p>
+          <p className="mx-auto mt-4 max-w-2xl text-center text-muted-foreground">{t("builtForSpeed")}</p>
           <div className="mt-16 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {VALUE_PROPOSITIONS.map((item) => {
+            {valuePropsList.map((item) => {
               const Icon = ICON_MAP[item.iconName];
               return (
                 <Card
@@ -150,14 +180,10 @@ export default function HomePage() {
        * Content comes from PRODUCT_FEATURES in product.ts.
        * ============================================================ */}
       <section className="container mx-auto max-w-6xl px-4 py-20">
-        <h2 className="text-center text-3xl font-bold tracking-tight sm:text-4xl">
-          Everything you need
-        </h2>
-        <p className="mx-auto mt-4 max-w-2xl text-center text-muted-foreground">
-          Production-ready infrastructure so you can focus on your product.
-        </p>
+        <h2 className="text-center text-3xl font-bold tracking-tight sm:text-4xl">{t("everythingTitle")}</h2>
+        <p className="mx-auto mt-4 max-w-2xl text-center text-muted-foreground">{t("everythingSubtitle")}</p>
         <div className="mt-16 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {PRODUCT_FEATURES.map((feature) => {
+          {featuresList.map((feature) => {
             const Icon = ICON_MAP[feature.iconName];
             return (
               <Card
@@ -184,14 +210,12 @@ export default function HomePage() {
        * ============================================================ */}
       <section className="border-y border-border/40 bg-muted/30 py-20">
         <div className="container mx-auto max-w-6xl px-4">
-          <h2 className="text-center text-3xl font-bold tracking-tight sm:text-4xl">
-            Simple, transparent pricing
-          </h2>
-          <p className="mx-auto mt-4 max-w-2xl text-center text-muted-foreground">
-            Choose a plan that fits your needs.
-          </p>
+          <h2 className="text-center text-3xl font-bold tracking-tight sm:text-4xl">{t("pricingTitle")}</h2>
+          <p className="mx-auto mt-4 max-w-2xl text-center text-muted-foreground">{t("pricingSubtitle")}</p>
           <div className="mt-16 grid gap-6 md:grid-cols-3">
-            {SUBSCRIPTION_PLANS.map((plan) => (
+            {SUBSCRIPTION_PLANS.map((plan) => {
+              const localizedPlan = planCopyById?.[plan.id];
+              return (
               <Card
                 key={plan.id}
                 className={
@@ -203,28 +227,31 @@ export default function HomePage() {
                 <CardHeader className="pb-2">
                   {plan.popular && (
                     <span className={`mb-2 inline-block w-fit rounded-full ${colors.badgeBackground} px-3 py-0.5 text-xs font-medium ${colors.badgeText}`}>
-                      Popular
+                      {t("popular")}
                     </span>
                   )}
-                  <CardTitle className="text-xl">{plan.name}</CardTitle>
-                  <CardDescription>{plan.description}</CardDescription>
+                  <CardTitle className="text-xl">{localizedPlan?.name ?? plan.name}</CardTitle>
+                  <CardDescription>{localizedPlan?.description ?? plan.description}</CardDescription>
                   <p className="mt-2 text-2xl font-bold">
                     ${plan.priceMonthly.toFixed(2)}
                     <span className="text-sm font-normal text-muted-foreground">/mo</span>
                   </p>
-                  <p className="text-sm text-muted-foreground">{plan.credits} credits/mo</p>
+                  <p className="text-sm text-muted-foreground">
+                    {plan.credits} {t("creditsMo")}
+                  </p>
                 </CardHeader>
                 <CardContent>
                   <Button asChild variant={plan.popular ? "default" : "outline"} className="w-full">
-                    <Link href="/pricing">View details</Link>
+                    <Link href="/pricing">{t("viewDetails")}</Link>
                   </Button>
                 </CardContent>
               </Card>
-            ))}
+              );
+            })}
           </div>
           <div className="mt-10 text-center">
             <Button asChild variant="link">
-              <Link href="/pricing">See full pricing and credit packs &rarr;</Link>
+              <Link href="/pricing">{t("seeFullPricing")}</Link>
             </Button>
           </div>
         </div>
@@ -272,11 +299,9 @@ export default function HomePage() {
        * ============================================================ */}
       <section className="border-t border-border/40 bg-muted/20 py-20">
         <div className="container mx-auto max-w-3xl px-4">
-          <h2 className="text-center text-3xl font-bold tracking-tight sm:text-4xl">
-            Frequently asked questions
-          </h2>
+          <h2 className="text-center text-3xl font-bold tracking-tight sm:text-4xl">{t("faqTitle")}</h2>
           <div className="mt-16 space-y-8">
-            {FAQ_ITEMS.map((item) => (
+            {faqItemsList.map((item) => (
               <div key={item.question}>
                 <h3 className="font-semibold text-foreground">{item.question}</h3>
                 <p className="mt-2 text-muted-foreground">{item.answer}</p>
@@ -293,19 +318,15 @@ export default function HomePage() {
        * ============================================================ */}
       <section className="container mx-auto max-w-6xl px-4 py-20">
         <div className={`rounded-2xl border ${colors.accentBorder} bg-gradient-to-br ${colors.accentBackground} p-12 text-center shadow-lg`}>
-          <h2 className="text-2xl font-bold sm:text-3xl">
-            Ready to get started?
-          </h2>
-          <p className="mt-4 text-muted-foreground">
-            Sign up in seconds. No credit card required.
-          </p>
+          <h2 className="text-2xl font-bold sm:text-3xl">{t("finalTitle")}</h2>
+          <p className="mt-4 text-muted-foreground">{t("finalSubtitle")}</p>
           <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
             <Button
               asChild
               size="lg"
               className={`min-w-[180px] bg-gradient-to-r ${colors.gradientFrom} ${colors.gradientTo} ${colors.gradientFromHover} ${colors.gradientToHover}`}
             >
-              <Link href="/login">Get Started Free</Link>
+              <Link href="/login">{t("getStartedFree")}</Link>
             </Button>
           </div>
         </div>

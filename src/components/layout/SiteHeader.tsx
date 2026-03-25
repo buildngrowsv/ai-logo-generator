@@ -22,8 +22,9 @@
  */
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
+import { Link, usePathname } from "@/i18n/navigation";
+import LogoForgeLocaleSwitcher from "@/components/LogoForgeLocaleSwitcher";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -37,8 +38,17 @@ import { useTheme } from "next-themes";
 import { useState } from "react";
 import { siteConfig } from "@/config/site";
 
+function navigationHrefToLabelKey(href: string): "studio" | "gallery" | "pricing" | "dashboard" {
+  if (href.startsWith("/studio")) return "studio";
+  if (href.startsWith("/gallery")) return "gallery";
+  if (href.startsWith("/pricing")) return "pricing";
+  if (href.startsWith("/dashboard")) return "dashboard";
+  return "studio";
+}
+
 export function SiteHeader() {
   const pathname = usePathname();
+  const t = useTranslations("Nav");
   const { theme, setTheme } = useTheme();
   const { data: session } = authClient.useSession();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -54,7 +64,7 @@ export function SiteHeader() {
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur-xl">
       <div className="container flex h-14 max-w-screen-2xl items-center px-4">
         {/* Logo — brand name with gradient from config */}
-        <Link href="/" className="mr-6 flex items-center gap-2 font-bold text-lg">
+        <Link href="/" className="mr-4 flex items-center gap-2 font-bold text-lg shrink-0">
           <span className={`${brandGradient} bg-clip-text text-transparent`}>
             {siteConfig.siteName}
           </span>
@@ -68,7 +78,7 @@ export function SiteHeader() {
                 href={link.href}
                 className={pathname === link.href ? "text-foreground" : "text-muted-foreground"}
               >
-                {link.label}
+                {t(navigationHrefToLabelKey(link.href))}
               </Link>
             </Button>
           ))}
@@ -79,6 +89,7 @@ export function SiteHeader() {
 
         {/* Right side controls — theme toggle + auth */}
         <div className="flex items-center gap-2">
+          <LogoForgeLocaleSwitcher />
           {/* Theme toggle — switches between dark and light mode */}
           <Button
             variant="ghost"
@@ -107,25 +118,25 @@ export function SiteHeader() {
                   <div className={`h-6 w-6 rounded-full ${brandGradient} flex items-center justify-center text-xs text-white font-bold`}>
                     {session.user.name?.[0] || session.user.email?.[0] || "U"}
                   </div>
-                  <span className="hidden sm:inline text-sm">{session.user.name || "Account"}</span>
+                  <span className="hidden sm:inline text-sm">{session.user.name || t("account")}</span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem asChild>
-                  <Link href="/dashboard">Dashboard</Link>
+                  <Link href="/dashboard">{t("dashboard")}</Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   onClick={() => authClient.signOut()}
                   className="text-destructive"
                 >
-                  Sign out
+                  {t("signOut")}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
             <Button asChild size="sm">
-              <Link href="/login">Sign in</Link>
+              <Link href="/login">{t("signIn")}</Link>
             </Button>
           )}
 
@@ -153,7 +164,7 @@ export function SiteHeader() {
               className="block px-3 py-2 text-sm rounded-md hover:bg-muted"
               onClick={() => setMobileMenuOpen(false)}
             >
-              {link.label}
+              {t(navigationHrefToLabelKey(link.href))}
             </Link>
           ))}
         </div>
