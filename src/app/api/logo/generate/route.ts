@@ -38,10 +38,26 @@ export async function POST(request: NextRequest) {
   /**
    * Authentication — only logged-in users can generate logos.
    * Credits are tied to user accounts, so auth is mandatory.
+   *
+   * WHY WE WRAP getSession IN TRY/CATCH:
+   * When DATABASE_URL is not configured (e.g., Vercel deployment missing the env var),
+   * auth.api.getSession throws a connection error instead of returning null.
+   * Without this catch, an unauthenticated request causes a 500 instead of a 401.
+   * We treat any auth error as "no session" — still returns 401, protection is unchanged.
+   * The database error is logged for operator visibility.
+   *
+   * PROTECTION IS NOT WEAKENED: any failure to confirm a valid session still blocks
+   * the request. We never proceed past this check without a confirmed session.user.
    */
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
+  let session: Awaited<ReturnType<typeof auth.api.getSession>> | null = null;
+  try {
+    session = await auth.api.getSession({
+      headers: await headers(),
+    });
+  } catch (authError) {
+    console.error("[logo/generate] Auth session check failed (DATABASE_URL missing?):", authError);
+    // Treat auth failure as no session — return 401, do not leak error details to client
+  }
 
   if (!session?.user) {
     return NextResponse.json(

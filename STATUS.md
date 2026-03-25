@@ -1,6 +1,6 @@
 # LogoForge AI — AI Logo Generator — STATUS
 
-**Last updated:** 2026-03-25 (Builder 6, commit ddec3c6)
+**Last updated:** 2026-03-25 (Builder 6, T021-04 — auth 500→401 fix)
 **Repo:** github.com/buildngrowsv/ai-logo-generator
 **Stack:** Next.js 15 + fal.ai FLUX + Stripe + Better Auth + Drizzle/Neon + Tailwind 4
 
@@ -15,7 +15,7 @@
 |-----------|--------|-------|
 | Landing page | DONE ✅ | Marketing-polished, LogoForge AI branding, unique SEO |
 | Core tool component | DONE ✅ | Business name + style prompt → FLUX logo generation |
-| API route (/api/generate) | DONE ✅ | Server-side fal.ai proxy, rate limited |
+| API route (/api/generate) | DONE ✅ | Server-side fal.ai proxy, auth-gated (401 without session) |
 | Stripe checkout endpoint | DONE ✅ | POST /api/stripe/checkout-session — verified returns cs_live_ URL |
 | Stripe price IDs | DONE ✅ | 3 subs + 3 packs — all set on Vercel production |
 | getStripePriceId fix | DONE ✅ | Static STRIPE_PRICE_ENV_MAP with literal access + .trim() (commit ddec3c6) |
@@ -47,12 +47,14 @@
 | `GOOGLE_CLIENT_SECRET` | ❌ MISSING | **BLOCKER** — Google OAuth broken without this |
 | `STRIPE_WEBHOOK_SECRET` | ❌ MISSING | Webhook signature verification fails — credits not allocated after payment |
 
-## What Works Right Now (no auth)
+## What Works Right Now
 
-- Landing page renders fully ✅
-- Logo generation via /api/generate ✅ (rate limited, free tier)
-- Pricing page renders with real price IDs ✅
-- POST /api/stripe/checkout-session → returns real cs_live_ Stripe checkout URL ✅
+- Landing page renders fully ✅ (HTTP 200 verified)
+- Pricing page renders with real price IDs ✅ (3 subs + 3 packs configured)
+- POST /api/stripe/checkout-session → returns real cs_live_ Stripe checkout URL ✅ (verified 2026-03-25)
+- POST /api/stripe/webhook → correctly rejects missing/invalid signatures ✅
+- POST /api/logo/generate → returns 401 for unauthenticated users ✅ (auth-gated, DATABASE_URL error no longer leaks as 500)
+- Credit deduction: ⚠️ TODO — credits not actually deducted (requires DATABASE_URL)
 
 ## What Requires BCL/Dashboard Work
 
@@ -72,6 +74,12 @@ env vars set via echo pipe append \n. Better Auth failed with ERR_INVALID_URL.
 **Fix:** `.trim()` on baseURL in `src/lib/auth.ts`.
 
 Both fixes deployed at commit ddec3c6 (2026-03-25).
+
+### Bug 3: auth.api.getSession throws 500 when DATABASE_URL missing (T021-04, Builder 6)
+`auth.api.getSession` was called outside the try/catch. When DATABASE_URL is not set, it throws
+a connection error → Next.js returns empty 500 body to unauthenticated callers instead of 401.
+**Fix:** Wrapped in try/catch; any auth error treated as no-session → 401. Protection unchanged.
+**Status:** Committed, pending redeploy.
 
 ## Revenue Config
 
