@@ -34,7 +34,110 @@ import { LOGO_STYLE_CATEGORIES, ACTION_CREDIT_COSTS } from "@/config/product";
  */
 const FAL_FLUX_ENDPOINT = "https://fal.run/fal-ai/flux/dev";
 
+// ---------------------------------------------------------------------------
+// Server-side IP rate limiter (in-memory, abuse prevention)
+//
+// WHY THIS EXISTS (2026-03-25, Builder 6, task d82046a5):
+// The fal.ai FLUX calls are expensive. Without server-side protection, anyone
+// who discovers the endpoint can call it in a loop and drain the FAL_KEY budget
+// without ever signing in. Even with auth gating (DATABASE_URL set), a burst
+// of unauthenticated requests hits the getSession() check and might consume
+// resources. This IP gate runs BEFORE auth — it's the outermost defense layer.
+//
+// WHY IN-MEMORY MAP (not Redis):
+// Redis adds cost and infra complexity for a lightweight clone. The Map resets
+// on Vercel serverless cold starts (typically every few minutes on free tier),
+// which means determined abusers can wait for a fresh instance. That's an
+// acceptable tradeoff — this stops casual bots and scripts. For production
+// scale, swap the Map ops for Upstash Redis ratelimit calls (one-line change).
+//
+// LIMIT CHOICE (5 per 24h per IP):
+// Logo generation is more expensive than most tools (4 FLUX images per call).
+// 5 logos = 20 FLUX images; beyond that, abuse risk outweighs demo goodwill.
+// Authenticated users bypass this gate entirely once DATABASE_URL is set
+// (they're credit-limited by their subscription, not by IP).
+// ---------------------------------------------------------------------------
+
+/** Tracks { count, windowStartMs } per IP — module-level for Vercel instance lifetime */
+const ipRateLimitMap = new Map<string, { count: number; windowStartMs: number }>();
+
+/** Free logo generations per IP per 24-hour rolling window (unauthenticated path) */
+const FREE_LOGOS_PER_IP_PER_DAY = 5;
+
+/** 24 hours in milliseconds */
+const RATE_LIMIT_WINDOW_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * checkIpRateLimit — returns true if this IP is within quota, false if over.
+ *
+ * Increments the counter optimistically (before the generation succeeds).
+ * Failed generations still count against the quota — intentional, since
+ * error-flooding is a recognized abuse vector (rapid retries with bad inputs).
+ *
+ * @param ip — extracted client IP from x-forwarded-for
+ */
+function checkIpRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const existing = ipRateLimitMap.get(ip);
+
+  if (!existing || now - existing.windowStartMs > RATE_LIMIT_WINDOW_MS) {
+    // New IP or expired window — start fresh with count = 1
+    ipRateLimitMap.set(ip, { count: 1, windowStartMs: now });
+    return true;
+  }
+
+  if (existing.count >= FREE_LOGOS_PER_IP_PER_DAY) {
+    return false; // Over daily quota
+  }
+
+  // Still within quota — increment and allow
+  existing.count += 1;
+  return true;
+}
+
+/**
+ * extractClientIp — returns the real client IP from Vercel's x-forwarded-for.
+ *
+ * Vercel prepends the original client IP as the leftmost value in the header.
+ * We take the first comma-separated entry, not the last (which would be a
+ * Vercel edge node IP rather than the actual visitor's address).
+ *
+ * Falls back to "unknown" if the header is absent (local dev, direct calls).
+ */
+function extractClientIp(request: NextRequest): string {
+  const forwarded = request.headers.get("x-forwarded-for");
+  if (forwarded) {
+    // x-forwarded-for: <original-client>, <proxy1>, <proxy2>
+    return forwarded.split(",")[0].trim();
+  }
+  return "unknown";
+}
+
 export async function POST(request: NextRequest) {
+  /**
+   * GATE 0: IP rate limiting (outermost layer — runs before any DB or auth touch)
+   *
+   * WHY BEFORE AUTH:
+   * auth.api.getSession() touches the database. If DATABASE_URL is misconfigured
+   * or under load, we don't want IP-level abuse to compound that pressure. The
+   * IP check is pure in-memory and costs ~microseconds.
+   *
+   * WHY UNAUTHENTICATED USERS SEE THIS:
+   * Once DATABASE_URL is configured and users authenticate, they're gated by
+   * their subscription credits, not by IP. This guard is specifically for the
+   * pre-auth / DATABASE_URL-missing state. It ensures the FAL_KEY isn't drained
+   * even when the full credit system isn't wired up yet.
+   */
+  const clientIp = extractClientIp(request);
+  if (!checkIpRateLimit(clientIp)) {
+    return NextResponse.json(
+      {
+        error: "Daily free limit reached. Sign up for a plan to generate more logos.",
+        upgradeRequired: true,
+      },
+      { status: 429 }
+    );
+  }
   /**
    * Authentication — only logged-in users can generate logos.
    * Credits are tied to user accounts, so auth is mandatory.
