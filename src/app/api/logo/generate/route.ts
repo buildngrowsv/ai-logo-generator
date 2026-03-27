@@ -26,6 +26,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { LOGO_STYLE_CATEGORIES, ACTION_CREDIT_COSTS } from "@/config/product";
+import {
+  checkUserCreditAvailability,
+  deductOneCreditForUser,
+} from "@/lib/credits";
 
 /**
  * The fal.ai API endpoint for FLUX image generation.
@@ -240,15 +244,41 @@ export async function POST(request: NextRequest) {
     const creditCost = ACTION_CREDIT_COSTS["generate-logo"];
 
     /**
-     * TODO: Deduct credits from user balance here.
-     * The template's credits.ts module handles this:
-     *   import { deductCredits } from "@/lib/credits";
-     *   await deductCredits(session.user.id, creditCost, "generate-logo");
+     * CREDIT GATE: Check that the user has remaining credits before calling fal.ai.
      *
-     * For now, generation proceeds without credit check so the app can be
-     * demonstrated before Stripe/DB are fully set up. Credit deduction
-     * MUST be enabled before production launch.
+     * WHY THIS RUNS BEFORE THE FAL.AI CALL:
+     * We check balance first, call fal.ai only if the user has capacity, then
+     * deduct AFTER a confirmed successful response. This way users never lose
+     * credits for a failed or errored generation — a critical UX requirement.
+     *
+     * SUBSCRIPTION TIER DEFAULT ("free"):
+     * We default all logged-in users to the "free" tier (3 generations/day as
+     * configured in PRODUCT_CONFIG.pricing.free). Once a real Stripe subscription
+     * table is wired to the DB, look up session.user's actual tier and pass it
+     * instead of "free". The credits.ts interface is designed for that swap.
+     *
+     * This resolves Reviewer 13 BLOCKER P0-1 (2026-03-26): the credit cost was
+     * computed but never enforced — any authenticated user could call the endpoint
+     * unlimited times, draining the FAL_KEY budget with no cost control.
      */
+    const userSubscriptionTier = "free" as const;
+    const creditAvailability = checkUserCreditAvailability(
+      session.user.id,
+      userSubscriptionTier
+    );
+    if (!creditAvailability.hasCreditsRemaining) {
+      return NextResponse.json(
+        {
+          error:
+            "You've used all your free logo generations for today. Upgrade your plan to generate more.",
+          upgradeRequired: true,
+          creditsRemaining: 0,
+          tierLimit: creditAvailability.tierCreditLimit,
+          resetsDaily: true,
+        },
+        { status: 429 }
+      );
+    }
 
     /**
      * Call fal.ai FLUX model to generate the logo.
@@ -302,10 +332,26 @@ export async function POST(request: NextRequest) {
       })
     );
 
+    /**
+     * Deduct one credit from the user's balance now that generation succeeded.
+     *
+     * WHY AFTER (not before) THE FAL.AI CALL:
+     * Users should not lose credits for failed generations. Deducting after a
+     * confirmed success means API errors, model overloads, or network timeouts
+     * don't consume the user's daily allowance — consistent with how platforms
+     * like Remove.bg, Canva, and similar tools handle credit accounting.
+     *
+     * The `userSubscriptionTier` was captured before the fal.ai call so that
+     * tier lookup (however it's implemented) is consistent across the check
+     * and the deduction within this single request.
+     */
+    deductOneCreditForUser(session.user.id, userSubscriptionTier);
+
     return NextResponse.json({
       success: true,
       logos: generatedLogos,
       creditsUsed: creditCost,
+      creditsRemaining: creditAvailability.remainingCreditsCount - 1,
       style: selectedStyle.name,
     });
   } catch (error) {
