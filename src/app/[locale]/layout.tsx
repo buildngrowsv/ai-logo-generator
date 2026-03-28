@@ -5,6 +5,7 @@
  * strings that drifted in root metadata (Scout 13 branding note).
  */
 import type { Metadata } from "next";
+import { GoogleAnalytics } from "@next/third-parties/google";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
@@ -129,6 +130,10 @@ export default async function LocaleLayout({ children, params }: Props) {
         />
       </head>
       <body className="min-h-screen antialiased">
+        {/* GA4 — conditionally rendered; set NEXT_PUBLIC_GA_ID in Vercel env to activate. */}
+        {process.env.NEXT_PUBLIC_GA_ID && (
+          <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID} />
+        )}
         <AuthSessionProvider>
           <NextIntlClientProvider messages={messages}>
             {/* Language switcher — EN | ES toggle, visible on all pages */}
