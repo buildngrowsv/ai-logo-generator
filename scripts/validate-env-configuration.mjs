@@ -17,12 +17,20 @@ const REQUIRED_VARS = [
   { name: "BETTER_AUTH_SECRET", description: "Random secret for signing auth tokens" },
   { name: "GOOGLE_CLIENT_ID", description: "Google OAuth Client ID" },
   { name: "GOOGLE_CLIENT_SECRET", description: "Google OAuth Client Secret" },
+  { name: "NEXT_PUBLIC_APP_URL", description: "Public app URL used for auth callbacks and Stripe redirects" },
   { name: "STRIPE_SECRET_KEY", description: "Stripe secret API key" },
   { name: "STRIPE_WEBHOOK_SECRET", description: "Stripe webhook signing secret" },
+  { name: "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY", description: "Stripe publishable key for client-side checkout UX" },
+  { name: "NEXT_PUBLIC_STRIPE_PRICE_BASIC_MONTHLY", description: "Starter subscription Stripe price ID" },
+  { name: "NEXT_PUBLIC_STRIPE_PRICE_STANDARD_MONTHLY", description: "Creator subscription Stripe price ID" },
+  { name: "NEXT_PUBLIC_STRIPE_PRICE_PRO_MONTHLY", description: "Agency subscription Stripe price ID" },
+  { name: "NEXT_PUBLIC_STRIPE_PRICE_STARTER_PACK", description: "Starter credit pack Stripe price ID" },
+  { name: "NEXT_PUBLIC_STRIPE_PRICE_GROWTH_PACK", description: "Growth credit pack Stripe price ID" },
+  { name: "NEXT_PUBLIC_STRIPE_PRICE_PROFESSIONAL_PACK", description: "Professional credit pack Stripe price ID" },
 ];
 
 const OPTIONAL_VARS = [
-  { name: "NEXT_PUBLIC_APP_URL", description: "Public app URL (defaults to localhost:4738)" },
+  { name: "BETTER_AUTH_URL", description: "Explicit Better Auth base URL override (optional if NEXT_PUBLIC_APP_URL is correct)" },
   { name: "R2_ACCOUNT_ID", description: "Cloudflare R2 account ID" },
   { name: "R2_ACCESS_KEY_ID", description: "Cloudflare R2 access key" },
   { name: "R2_SECRET_ACCESS_KEY", description: "Cloudflare R2 secret key" },
@@ -55,7 +63,7 @@ for (const v of OPTIONAL_VARS) {
 
 if (hasErrors) {
   console.log("\n❌ Some required environment variables are missing.");
-  console.log("   Copy .env.example to .env.local and fill in the values.");
+  console.log("   Self-serve checkout is not buyer-ready until auth, Stripe secrets, app URL, and all published Stripe price IDs are configured together.");
   process.exit(1);
 } else {
   console.log("\n✅ All required environment variables are set.");

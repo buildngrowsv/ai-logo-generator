@@ -25,11 +25,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
+import { db } from "@/db";
+import { userProfiles } from "@/db/schema/users";
+import { creditTransactions } from "@/db/schema/credit-transactions";
 import { LOGO_STYLE_CATEGORIES, ACTION_CREDIT_COSTS } from "@/config/product";
 import {
   checkUserCreditAvailability,
   deductOneCreditForUser,
+  type SubscriptionTier,
 } from "@/lib/credits";
+import { and, eq, gte, sql } from "drizzle-orm";
+import { isProActive } from "@/lib/subscription-store";
 
 /**
  * The fal.ai API endpoint for FLUX image generation.
@@ -117,7 +123,197 @@ function extractClientIp(request: NextRequest): string {
   return "unknown";
 }
 
+type BillingGuardResult =
+  | {
+      readonly mode: "database-balance";
+      readonly planLabel: string;
+      readonly creditsRemainingAfterReservation: number;
+    }
+  | {
+      readonly mode: "free-fallback";
+      readonly subscriptionTier: SubscriptionTier;
+      readonly creditsRemainingAfterSuccess: number;
+      readonly tierCreditLimit: number;
+      readonly resetsDaily: boolean;
+    };
+
+function normalizeStoredPlanToCreditTier(storedPlan: string | null | undefined): SubscriptionTier {
+  switch (storedPlan) {
+    case "basic":
+    case "starter":
+      return "basic";
+    case "pro":
+    case "creator":
+    case "agency":
+    case "standard":
+      return "pro";
+    case "free":
+      return "free";
+    default:
+      return "none";
+  }
+}
+
+async function reserveDatabaseCreditsForGeneration(
+  userId: string,
+  creditCost: number
+): Promise<BillingGuardResult | NextResponse> {
+  const [existingUserProfile] = await db
+    .select({
+      credits: userProfiles.credits,
+      plan: userProfiles.plan,
+    })
+    .from(userProfiles)
+    .where(eq(userProfiles.userId, userId))
+    .limit(1);
+
+  if (!existingUserProfile) {
+    const freeTierAvailability = checkUserCreditAvailability(userId, "free");
+
+    if (!freeTierAvailability.hasCreditsRemaining) {
+      return NextResponse.json(
+        {
+          error:
+            "You've used all your free logo generations for today. Upgrade or buy credits to generate more.",
+          upgradeRequired: true,
+          creditsRemaining: 0,
+          tierLimit: freeTierAvailability.tierCreditLimit,
+          resetsDaily: true,
+        },
+        { status: 429 }
+      );
+    }
+
+    return {
+      mode: "free-fallback",
+      subscriptionTier: "free",
+      creditsRemainingAfterSuccess:
+        freeTierAvailability.remainingCreditsCount - 1,
+      tierCreditLimit: freeTierAvailability.tierCreditLimit,
+      resetsDaily: true,
+    };
+  }
+
+  if (existingUserProfile.credits < creditCost) {
+    return NextResponse.json(
+      {
+        error: `Insufficient credits. This logo generation costs ${creditCost} credits.`,
+        upgradeRequired: true,
+        creditsRequired: creditCost,
+        creditsRemaining: Math.max(0, existingUserProfile.credits),
+        currentPlan: existingUserProfile.plan,
+      },
+      { status: 402 }
+    );
+  }
+
+  /**
+   * Reserve credits before the fal.ai call so concurrent requests cannot both
+   * spend the same paid balance. If the upstream provider fails later in the
+   * request, we explicitly refund this reservation in the catch/failure path.
+   */
+  const reservationOutcome = await db.transaction(async (transaction) => {
+    const [reservedUserProfile] = await transaction
+      .update(userProfiles)
+      .set({
+        credits: sql`${userProfiles.credits} - ${creditCost}`,
+        updatedAt: new Date(),
+      })
+      .where(
+        and(
+          eq(userProfiles.userId, userId),
+          gte(userProfiles.credits, creditCost)
+        )
+      )
+      .returning({
+        credits: userProfiles.credits,
+        plan: userProfiles.plan,
+      });
+
+    if (!reservedUserProfile) {
+      return null;
+    }
+
+    await transaction.insert(creditTransactions).values({
+      userId,
+      amount: -creditCost,
+      reason: "action:generate-logo",
+    });
+
+    return reservedUserProfile;
+  });
+
+  if (!reservationOutcome) {
+    return NextResponse.json(
+      {
+        error:
+          "Your credit balance changed during this request. Refresh and try again.",
+        upgradeRequired: true,
+      },
+      { status: 409 }
+    );
+  }
+
+  return {
+    mode: "database-balance",
+    planLabel: reservationOutcome.plan,
+    creditsRemainingAfterReservation: reservationOutcome.credits,
+  };
+}
+
+async function refundReservedDatabaseCredits(
+  userId: string,
+  creditCost: number,
+  reason: string
+): Promise<void> {
+  await db.transaction(async (transaction) => {
+    await transaction
+      .update(userProfiles)
+      .set({
+        credits: sql`${userProfiles.credits} + ${creditCost}`,
+        updatedAt: new Date(),
+      })
+      .where(eq(userProfiles.userId, userId));
+
+    await transaction.insert(creditTransactions).values({
+      userId,
+      amount: creditCost,
+      reason,
+    });
+  });
+}
+
 export async function POST(request: NextRequest) {
+  let reservedPaidCredits = false;
+  let reservedCreditCost = 0;
+  // ---- T018: Pro subscription token check (runs before IP rate limit) ----
+  //
+  // Pro subscribers receive a UUID token after Stripe payment is confirmed
+  // (via the webhook activating it in Redis). They store it in localStorage
+  // and send it as the `x-pro-token` header on every generate request.
+  //
+  // If the token is valid and active in Redis, we bypass the IP rate limit
+  // entirely. Pro users are entitled to unlimited generations; the IP gate
+  // is only for free-tier abuse prevention.
+  //
+  // FAIL CLOSED: If Redis is down or the token is invalid/expired/pending,
+  // isProActive() returns false and the request continues to the IP gate.
+  // This means Redis downtime temporarily demotes Pro users to free-tier
+  // rate limits, which is safer than the alternative (granting unlimited
+  // access when we cannot verify the token).
+  //
+  // TOKEN FLOW (full lifecycle, summarized here for future readers):
+  //   1. /api/stripe/checkout-session creates a UUID token → stores "pending" in Redis
+  //      and embeds it in success_url as ?token=<uuid>
+  //   2. /api/stripe/webhook activates the token to "active" (13-month TTL) on payment
+  //   3. Client reads token from URL on success page → stores in localStorage
+  //   4. Client includes token as x-pro-token header in generate requests
+  //   5. This check reads x-pro-token and looks it up in Redis
+  //
+  // See: src/lib/subscription-store.ts for full design rationale.
+  const proToken = request.headers.get("x-pro-token");
+  const isProSubscriber = await isProActive(proToken);
+
   /**
    * GATE 0: IP rate limiting (outermost layer — runs before any DB or auth touch)
    *
@@ -131,9 +327,12 @@ export async function POST(request: NextRequest) {
    * their subscription credits, not by IP. This guard is specifically for the
    * pre-auth / DATABASE_URL-missing state. It ensures the FAL_KEY isn't drained
    * even when the full credit system isn't wired up yet.
+   *
+   * T018: Pro subscribers bypass this gate entirely — their entitlement is
+   * validated via the Redis token check above.
    */
   const clientIp = extractClientIp(request);
-  if (!checkIpRateLimit(clientIp)) {
+  if (!isProSubscriber && !checkIpRateLimit(clientIp)) {
     return NextResponse.json(
       {
         error: "Daily free limit reached. Sign up for a plan to generate more logos.",
@@ -244,41 +443,24 @@ export async function POST(request: NextRequest) {
     const creditCost = ACTION_CREDIT_COSTS["generate-logo"];
 
     /**
-     * CREDIT GATE: Check that the user has remaining credits before calling fal.ai.
-     *
-     * WHY THIS RUNS BEFORE THE FAL.AI CALL:
-     * We check balance first, call fal.ai only if the user has capacity, then
-     * deduct AFTER a confirmed successful response. This way users never lose
-     * credits for a failed or errored generation — a critical UX requirement.
-     *
-     * SUBSCRIPTION TIER DEFAULT ("free"):
-     * We default all logged-in users to the "free" tier (3 generations/day as
-     * configured in PRODUCT_CONFIG.pricing.free). Once a real Stripe subscription
-     * table is wired to the DB, look up session.user's actual tier and pass it
-     * instead of "free". The credits.ts interface is designed for that swap.
-     *
-     * This resolves Reviewer 13 BLOCKER P0-1 (2026-03-26): the credit cost was
-     * computed but never enforced — any authenticated user could call the endpoint
-     * unlimited times, draining the FAL_KEY budget with no cost control.
+     * CREDIT GATE:
+     * 1. Prefer the persisted DB balance for any user who already has a profile.
+     *    That is the production source of truth for paid credits, pack purchases,
+     *    and future webhook allocations.
+     * 2. Reserve paid credits before the fal.ai spend so concurrent requests
+     *    cannot overspend the same balance.
+     * 3. Keep the in-memory free-tier fallback for brand-new users who have not
+     *    been materialized into user_profiles yet.
      */
-    const userSubscriptionTier = "free" as const;
-    const creditAvailability = checkUserCreditAvailability(
+    const billingGuardResult = await reserveDatabaseCreditsForGeneration(
       session.user.id,
-      userSubscriptionTier
+      creditCost
     );
-    if (!creditAvailability.hasCreditsRemaining) {
-      return NextResponse.json(
-        {
-          error:
-            "You've used all your free logo generations for today. Upgrade your plan to generate more.",
-          upgradeRequired: true,
-          creditsRemaining: 0,
-          tierLimit: creditAvailability.tierCreditLimit,
-          resetsDaily: true,
-        },
-        { status: 429 }
-      );
+    if (billingGuardResult instanceof NextResponse) {
+      return billingGuardResult;
     }
+    reservedPaidCredits = billingGuardResult.mode === "database-balance";
+    reservedCreditCost = reservedPaidCredits ? creditCost : 0;
 
     /**
      * Call fal.ai FLUX model to generate the logo.
@@ -309,6 +491,15 @@ export async function POST(request: NextRequest) {
     if (!falResponse.ok) {
       const errorText = await falResponse.text();
       console.error("[logo/generate] fal.ai API error:", falResponse.status, errorText);
+      if (reservedPaidCredits) {
+        reservedPaidCredits = false;
+        await refundReservedDatabaseCredits(
+          session.user.id,
+          reservedCreditCost,
+          "refund:generate-logo:fallback-provider-error"
+        );
+        reservedCreditCost = 0;
+      }
       return NextResponse.json(
         { error: "Logo generation failed. Please try again." },
         { status: 502 }
@@ -332,30 +523,43 @@ export async function POST(request: NextRequest) {
       })
     );
 
-    /**
-     * Deduct one credit from the user's balance now that generation succeeded.
-     *
-     * WHY AFTER (not before) THE FAL.AI CALL:
-     * Users should not lose credits for failed generations. Deducting after a
-     * confirmed success means API errors, model overloads, or network timeouts
-     * don't consume the user's daily allowance — consistent with how platforms
-     * like Remove.bg, Canva, and similar tools handle credit accounting.
-     *
-     * The `userSubscriptionTier` was captured before the fal.ai call so that
-     * tier lookup (however it's implemented) is consistent across the check
-     * and the deduction within this single request.
-     */
-    deductOneCreditForUser(session.user.id, userSubscriptionTier);
+    if (billingGuardResult.mode === "free-fallback") {
+      /**
+       * Free-tier fallback still uses the in-memory limiter because brand-new
+       * accounts may not have a DB profile row yet. Paid users no longer touch
+       * this path; their balance was already reserved above.
+       */
+      deductOneCreditForUser(
+        session.user.id,
+        normalizeStoredPlanToCreditTier(billingGuardResult.subscriptionTier)
+      );
+    }
 
     return NextResponse.json({
       success: true,
       logos: generatedLogos,
       creditsUsed: creditCost,
-      creditsRemaining: creditAvailability.remainingCreditsCount - 1,
+      creditsRemaining:
+        billingGuardResult.mode === "database-balance"
+          ? billingGuardResult.creditsRemainingAfterReservation
+          : billingGuardResult.creditsRemainingAfterSuccess,
       style: selectedStyle.name,
     });
   } catch (error) {
     console.error("[logo/generate] Unexpected error:", error);
+    if (reservedPaidCredits && session?.user?.id) {
+      try {
+        reservedPaidCredits = false;
+        await refundReservedDatabaseCredits(
+          session.user.id,
+          reservedCreditCost,
+          "refund:generate-logo:unexpected-server-error"
+        );
+        reservedCreditCost = 0;
+      } catch (refundError) {
+        console.error("[logo/generate] Failed to refund reserved credits:", refundError);
+      }
+    }
     return NextResponse.json(
       { error: "An unexpected error occurred. Please try again." },
       { status: 500 }

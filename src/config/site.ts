@@ -42,12 +42,12 @@ export const siteConfig = {
    * Production URL — will be set once deployed to Vercel with custom domain.
    * In development, NEXT_PUBLIC_APP_URL env var overrides this.
    */
-  siteUrl: "https://logoforgeai.com",
+  siteUrl: process.env.NEXT_PUBLIC_APP_URL || "https://generateailogo.com",
 
   /**
    * Support email — displayed in the footer and used for mailto: links.
    */
-  supportEmail: "support@logoforgeai.com",
+  supportEmail: "support@symplyai.io",
 
   /**
    * Brand gradient colors — purple-to-pink for a creative/design tool feel.

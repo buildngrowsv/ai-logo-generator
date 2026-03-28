@@ -8,15 +8,18 @@
  *   - Basic users get reasonable usage (50/month) for their $4.99
  *   - Pro users get unlimited (we eat the cost, but they're paying $9.99/mo)
  * 
- * ARCHITECTURE DECISION — In-Memory vs Database:
- * This template uses in-memory storage (a Map) for credit tracking. This is
- * intentional for the template — it means you can run the template with ZERO
- * infrastructure (no database needed) to test the flow.
- * 
- * FOR PRODUCTION: Replace the in-memory Map with a database table. The interface
- * is designed to make this swap trivial — just change the implementation of
- * getUserCreditRecord() and deductOneCredit() to use Drizzle ORM queries instead
- * of Map operations. The rest of the code doesn't change.
+ * ARCHITECTURE DECISION — Database-backed paid credits, in-memory free fallback:
+ * ai-logo-generator now uses the database-backed user_profiles.credits balance as
+ * the production source of truth for paid usage. This file remains responsible
+ * only for the lightweight free-tier fallback used before a user has a persisted
+ * profile row. That means:
+ *   - Paid subscriptions and credit packs are fulfilled durably by the Stripe webhook
+ *   - The generate route reserves/decrements paid credits in Postgres
+ *   - This in-memory Map only covers brand-new accounts that have not been
+ *     materialized into user_profiles yet
+ *
+ * The fallback still resets on server restart, so it should never be treated as
+ * the durable source of truth for paid customers.
  * 
  * WHY NOT USE STRIPE USAGE-BASED BILLING:
  * Stripe supports metered billing, but it adds complexity (usage records, billing
@@ -49,12 +52,13 @@ interface CreditRecord {
 
 /**
  * In-memory credit store.
- * 
- * WARNING: This resets when the server restarts. Fine for development and
- * testing the template, but MUST be replaced with a database for production.
- * See the TODO comments in getUserCreditRecord() and deductOneCredit().
- * 
- * Key = user ID (from NextAuth session), Value = their credit record.
+ *
+ * WARNING: This is only the free-tier fallback for users without a DB profile.
+ * Paid balances live in Postgres, not here. This Map still resets on server
+ * restart, which is acceptable for the fallback path but not for revenue-backed
+ * credits.
+ *
+ * Key = user ID, Value = their fallback free-tier record.
  */
 const inMemoryCreditStore = new Map<string, CreditRecord>();
 
@@ -104,10 +108,9 @@ function hasPeriodExpired(
 /**
  * Retrieves or initializes a user's credit record.
  * 
- * TODO (PRODUCTION): Replace this with a database query:
- *   const record = await db.query.creditRecords.findFirst({
- *     where: eq(creditRecords.userId, userId)
- *   });
+ * This helper intentionally only manages the fallback free-tier record.
+ * Once a user has a materialized profile row and purchased credits, the
+ * generate route uses Postgres instead.
  */
 function getUserCreditRecord(
   userId: string,
@@ -217,10 +220,9 @@ export function checkUserCreditAvailability(
  * We don't want to deduct credits for failed generations — that would be
  * a terrible user experience and would generate support tickets.
  * 
- * TODO (PRODUCTION): Replace with a database update:
- *   await db.update(creditRecords)
- *     .set({ usageCount: sql`usage_count + 1` })
- *     .where(eq(creditRecords.userId, userId));
+ * This only deducts from the in-memory fallback path. Paid credit deductions
+ * happen in the generate route against user_profiles.credits so concurrent
+ * requests cannot overspend the durable balance.
  */
 export function deductOneCreditForUser(
   userId: string,

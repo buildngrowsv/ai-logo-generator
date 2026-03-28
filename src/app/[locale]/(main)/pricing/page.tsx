@@ -14,12 +14,12 @@
  * 2. If logged in → POST /api/stripe/checkout-session with { priceId, mode }
  * 3. API returns { url } → redirect to Stripe's hosted checkout page
  * 4. After payment → Stripe redirects to /dashboard?checkout=success
- * 5. Stripe webhook fires → allocates credits in the background
+ * 5. Stripe webhook fires → persists the credits/subscription update in the database
  *
  * STRIPE PRICE IDS:
  * Each plan/pack has a `priceIdEnvKey` that points to an env var holding
- * the Stripe Price ID. If the env var is not set, the button shows an error
- * toast instead of attempting checkout.
+ * the Stripe Price ID. If the env var is not set, the button is disabled.
+ * Other auth and Stripe runtime checks still fail closed in the checkout API.
  *
  * All content comes from src/config/product.ts.
  * All branding comes from src/config/site.ts.
@@ -52,6 +52,9 @@ export default function PricingPage() {
   const [isAnnual, setIsAnnual] = useState(false);
   const [loadingPriceId, setLoadingPriceId] = useState<string | null>(null);
   const colors = siteConfig.themeColors;
+  const selfServeCatalogReady =
+    SUBSCRIPTION_PLANS.every((plan) => Boolean(getStripePriceId(plan.priceIdEnvKey))) &&
+    CREDIT_PACKS.every((pack) => Boolean(getStripePriceId(pack.priceIdEnvKey)));
 
   /**
    * Handle Get Started button click for any plan or pack.
@@ -64,7 +67,7 @@ export default function PricingPage() {
    */
   async function handleGetStarted(priceId: string | undefined, mode: "subscription" | "payment") {
     if (!priceId) {
-      toast.error("This plan is not configured yet. Please set up Stripe Price IDs in your .env.local.");
+      toast.error("This deployment is not configured for self-serve checkout yet. Stripe price IDs are still missing.");
       return;
     }
     if (!session?.user) {
@@ -104,7 +107,14 @@ export default function PricingPage() {
             </span>
           </h1>
           <p className="mt-4 text-lg text-muted-foreground">
-            Choose a subscription or buy credits. Cancel anytime.
+            Choose a subscription or buy credits once this deployment's auth, Stripe, webhook, and price configuration is complete.
+          </p>
+
+          <p className="mx-auto mt-4 max-w-3xl rounded-lg border border-border/60 bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
+            Self-serve checkout only works on deployments with working auth, `NEXT_PUBLIC_APP_URL`,
+            Stripe secret + webhook secrets, and the published price IDs configured together.
+            This page disables purchase buttons when a published price ID is missing, and the checkout
+            API still fails closed if auth or the remaining Stripe runtime contract is incomplete.
           </p>
 
           {/* Billing toggle — Monthly vs Annual */}
@@ -134,6 +144,7 @@ export default function PricingPage() {
             {SUBSCRIPTION_PLANS.map((plan) => {
               const priceId = getStripePriceId(plan.priceIdEnvKey);
               const isLoading = loadingPriceId === priceId;
+              const isUnavailable = !priceId;
               return (
                 <Card
                   key={plan.id}
@@ -161,11 +172,20 @@ export default function PricingPage() {
                     <Button
                       className="w-full"
                       variant={plan.popular ? "default" : "outline"}
-                      disabled={isLoading}
+                      disabled={isLoading || isUnavailable}
                       onClick={() => handleGetStarted(priceId, "subscription")}
                     >
-                      {isLoading ? "Redirecting..." : "Get Started"}
+                      {isLoading
+                        ? "Redirecting..."
+                        : isUnavailable
+                          ? "Unavailable Here"
+                          : "Get Started"}
                     </Button>
+                    {isUnavailable && (
+                      <p className="mt-2 text-xs text-muted-foreground">
+                        This deployment is missing the Stripe price configuration for this plan.
+                      </p>
+                    )}
                   </CardContent>
                 </Card>
               );
@@ -183,6 +203,7 @@ export default function PricingPage() {
             {CREDIT_PACKS.map((pack) => {
               const priceId = getStripePriceId(pack.priceIdEnvKey);
               const isLoading = loadingPriceId === priceId;
+              const isUnavailable = !priceId;
               return (
                 <Card key={pack.id} className="border-border/60">
                   <CardHeader className="pb-2">
@@ -194,11 +215,20 @@ export default function PricingPage() {
                     <Button
                       variant="outline"
                       className="w-full"
-                      disabled={isLoading}
+                      disabled={isLoading || isUnavailable}
                       onClick={() => handleGetStarted(priceId, "payment")}
                     >
-                      {isLoading ? "Redirecting..." : "Buy Credits"}
+                      {isLoading
+                        ? "Redirecting..."
+                        : isUnavailable
+                          ? "Unavailable Here"
+                          : "Buy Credits"}
                     </Button>
+                    {isUnavailable && (
+                      <p className="mt-2 text-xs text-muted-foreground">
+                        This deployment is missing the Stripe price configuration for this pack.
+                      </p>
+                    )}
                   </CardContent>
                 </Card>
               );
@@ -207,12 +237,18 @@ export default function PricingPage() {
         </section>
 
         {/* Help text for unauthenticated users */}
+        {!selfServeCatalogReady && (
+          <p className="mt-10 text-center text-sm text-muted-foreground">
+            Pricing is visible for transparency, but this deployment is not fully self-serve yet because one or more published Stripe prices are still unset.
+          </p>
+        )}
+
         {!session?.user && (
           <p className="mt-12 text-center text-sm text-muted-foreground">
             <Link href="/login" className="underline hover:text-foreground">
               Sign in
             </Link>{" "}
-            to purchase. New users can create an account during checkout.
+            to purchase. New users must finish account creation before checkout so credits can be attached to the correct profile.
           </p>
         )}
       </div>

@@ -1,5 +1,5 @@
 /**
- * robots.ts — Generated robots.txt for LogoMint AI (AI Logo Generator)
+ * robots.ts — Generated robots.txt for LogoForge AI
  *
  * Allows all crawlers to index all public pages.
  * Blocks /api/ and /_next/ from indexing (not useful for SEO).
@@ -8,7 +8,9 @@
  */
 import type { MetadataRoute } from "next";
 
-const BASE_URL = "https://ai-logo-generator.vercel.app";
+import { siteConfig } from "@/config/site";
+
+const BASE_URL = siteConfig.siteUrl.replace(/\/$/, "");
 
 export default function robots(): MetadataRoute.Robots {
   return {

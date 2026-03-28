@@ -2,4 +2,4 @@ User-agent: *
 Allow: /
 Disallow: /api/
 Disallow: /dashboard/
-Sitemap: https://yoursaas.com/sitemap.xml
+Sitemap: https://logo.symplyai.io/sitemap.xml

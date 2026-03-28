@@ -15,7 +15,7 @@
  * actual legal pages (or use a generator like Termly/Iubenda).
  */
 
-import { PRODUCT_CONFIG } from "@/lib/config";
+import { siteConfig } from "@/config/site";
 
 export function LandingFooter() {
   const currentYear = new Date().getFullYear();
@@ -27,26 +27,32 @@ export function LandingFooter() {
           {/* Branding */}
           <div className="flex items-center gap-3">
             <span className="text-lg font-bold gradient-text">
-              {PRODUCT_CONFIG.name}
+              {siteConfig.siteName}
             </span>
           </div>
 
           {/* Legal links */}
           <div className="flex items-center gap-6 text-sm text-text-muted">
             <a
-              href="/terms"
+              href="/terms-of-service"
               className="hover:text-text-secondary transition-colors"
             >
               Terms of Service
             </a>
             <a
-              href="/privacy"
+              href="/privacy-policy"
               className="hover:text-text-secondary transition-colors"
             >
               Privacy Policy
             </a>
             <a
-              href="mailto:support@example.com"
+              href="/refund-policy"
+              className="hover:text-text-secondary transition-colors"
+            >
+              Refund Policy
+            </a>
+            <a
+              href={`mailto:${siteConfig.supportEmail}`}
               className="hover:text-text-secondary transition-colors"
             >
               Contact
@@ -55,7 +61,7 @@ export function LandingFooter() {
 
           {/* Copyright */}
           <p className="text-sm text-text-muted">
-            &copy; {currentYear} {PRODUCT_CONFIG.name}. All rights reserved.
+            &copy; {currentYear} {siteConfig.siteName}. All rights reserved.
           </p>
         </div>
       </div>
