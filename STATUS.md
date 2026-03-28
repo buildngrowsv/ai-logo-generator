@@ -9,6 +9,12 @@
 - **Primary:** https://logo.symplyai.io (HTTP 200 ✅)
 - **Vercel:** https://ai-logo-generator.vercel.app
 
+## Dev / Preview URL (develop branch)
+
+- `develop` branch exists on origin (same commit as main as of 2026-03-28)
+- **Dev URL:** Will auto-appear at `https://ai-logo-generator-git-develop-buildngrowsvs-projects.vercel.app` once a develop-only commit is pushed
+- Set `DEV_BASE_URL=https://ai-logo-generator-git-develop-buildngrowsvs-projects.vercel.app` for E2E runs targeting dev
+
 ## Component Status
 
 | Component | Status | Notes |
