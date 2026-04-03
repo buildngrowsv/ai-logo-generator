@@ -69,6 +69,8 @@ export function SiteFooter() {
         <div className="mt-12 pt-8 border-t border-gray-800/60 text-center">
           <p className="text-xs text-gray-400">
             Copyright &copy; {currentYear} {siteConfig.siteName}. All rights reserved.
+            {" · "}
+            <a href="https://symplyai.io" target="_blank" rel="noopener" className="hover:text-gray-200 transition-colors">Powered by SymplyAI</a>
           </p>
         </div>
       </div>
