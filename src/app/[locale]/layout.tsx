@@ -54,11 +54,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       siteName: t("siteName"),
       locale: ogLocale,
       url: canonicalPath,
+      images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: "LogoForge — AI Logo Generator" }],
     },
     twitter: {
       card: "summary_large_image",
       title: t("twitterTitle"),
       description: t("twitterDescription"),
+      images: ["/opengraph-image"],
+    },
+    verification: {
+      google: "CJx0tLzl09NcMkFKu5fAayPbWhxzqVJTyyERVA37s78",
     },
     robots: { index: true, follow: true },
   };
@@ -130,9 +135,9 @@ export default async function LocaleLayout({ children, params }: Props) {
         />
       </head>
       <body className="min-h-screen antialiased">
-        {/* GA4 — conditionally rendered; set NEXT_PUBLIC_GA_ID in Vercel env to activate. */}
-        {process.env.NEXT_PUBLIC_GA_ID && (
-          <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID} />
+        {/* GA4 — conditionally rendered; set NEXT_PUBLIC_GA_MEASUREMENT_ID in Vercel env to activate. */}
+        {process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID && (
+          <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID} />
         )}
         <AuthSessionProvider>
           <NextIntlClientProvider messages={messages}>
