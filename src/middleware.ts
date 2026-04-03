@@ -29,6 +29,14 @@ const PUBLIC_PATHS = [
   "/terms-of-service",
   "/refund-policy",
   "/gallery",
+  /* SEO comparison pages — must be public for Google indexing */
+  "/vs",
+  /* Blog content */
+  "/blog",
+  /* Sitemap and OG image routes */
+  "/sitemap.xml",
+  "/robots.txt",
+  "/opengraph-image",
 ];
 
 function isPublicPath(strippedPathname: string): boolean {
