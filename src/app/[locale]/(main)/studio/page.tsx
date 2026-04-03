@@ -47,6 +47,7 @@ import Image from "next/image";
 import { useDailyUseTracker } from "@/hooks/useDailyUseTracker";
 import { UpgradeModal } from "@/components/conversion/UpgradeModal";
 import { EmailCaptureModal } from "@/components/conversion/EmailCaptureModal";
+import { ga4TrackLogoGenerationRequested } from "@/lib/analytics/ga4-web-events";
 
 /**
  * Type for a generated logo returned from the API.
@@ -117,6 +118,15 @@ export default function LogoStudioPage() {
     setError(null);
 
     try {
+      /**
+       * GA4 custom event at **request start** — see `ga4-web-events.ts` for why we avoid
+       * sending **businessName** into analytics params (PII / brand secrets in user input).
+       */
+      ga4TrackLogoGenerationRequested({
+        surface: "studio",
+        styleCategory: selectedStyle,
+      });
+
       const response = await fetch("/api/logo/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -170,6 +180,11 @@ export default function LogoStudioPage() {
     setError(null);
 
     try {
+      ga4TrackLogoGenerationRequested({
+        surface: "studio_post_email_gate",
+        styleCategory: selectedStyle,
+      });
+
       const response = await fetch("/api/logo/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

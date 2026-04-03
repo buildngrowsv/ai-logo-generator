@@ -1,6 +1,6 @@
 # LogoForge AI — AI Logo Generator — STATUS
 
-**Last updated:** 2026-03-25 (Builder 6, d82046a5 — IP rate limiting added to generate route)
+**Last updated:** 2026-03-31 (Builder 2 — `bs-mail` Scout 4 **`RELEASE` ~1774994114`: GA4 Admin **streams table** / wizard path for **`logo.symplyai.io`**; prod HTML still **no** gtag until Vercel **`NEXT_PUBLIC_GA_ID`**)
 **Repo:** github.com/buildngrowsv/ai-logo-generator
 **Stack:** Next.js 15 + fal.ai FLUX + Stripe + Better Auth + Drizzle/Neon + Tailwind 4
 
@@ -31,6 +31,7 @@
 | Deploy | LIVE ✅ | logo.symplyai.io |
 | FAL_KEY | SET ✅ | Production env var set on Vercel |
 | symplyai.io subdomain | LIVE ✅ | logo.symplyai.io CNAME → cname.vercel-dns.com |
+| **GA4 (web)** | **CODE READY** ✅ | **`layout.tsx`** mounts **`@next/third-parties/google`** when **`NEXT_PUBLIC_GA_ID`** set; **`src/lib/analytics/ga4-web-events.ts`** — **`oauth_signin_click`**, **`begin_checkout`**, Stripe-return **`purchase`**, **`logo_generation_requested`** (studio + email-gate paths; **style only**, no business name in GA params — 2026-03-31); **`.env.example`** + **`npm run verify:ga-gtag-prod`**. **Scout 4 (`bs-mail` ~1774994114, RCC `43a284c2`):** **GA4** **wizard + streams table** progressed for **`logo.symplyai.io`** — **prod `curl` still no `G-`** until **Vercel `NEXT_PUBLIC_GA_ID`** + **redeploy**. **SoT:** **`BUILDER2-OPERATOR-ANALYTICS-PICK-FIVE-2026-03-31.md`**, **`REVIEWER5-OPERATOR-FIVE-PROJECT-ANALYTICS-FINISH-2026-03-31.md`**. |
 
 ## Environment Variables (Vercel Production)
 
@@ -48,6 +49,7 @@
 | `BETTER_AUTH_URL` | ✅ Set | https://logo.symplyai.io |
 | `BETTER_AUTH_SECRET` | ✅ Set | Generated secret |
 | `NEXT_PUBLIC_APP_URL` | ✅ Set | https://logo.symplyai.io |
+| `NEXT_PUBLIC_GA_ID` | **VERIFY (BC1)** | **Not** confirmed in this STATUS row — set to **`G-…`** from **GA4 Admin** Web stream for **`logo.symplyai.io`** per **`REVIEWER5-OPERATOR-FIVE-PROJECT-ANALYTICS-FINISH-2026-03-31.md`**. |
 | `DATABASE_URL` | ❌ MISSING | **BLOCKER** — Neon Postgres needed for user auth/credits |
 | `GOOGLE_CLIENT_ID` | ❌ MISSING | **BLOCKER** — Google OAuth broken without this |
 | `GOOGLE_CLIENT_SECRET` | ❌ MISSING | **BLOCKER** — Google OAuth broken without this |

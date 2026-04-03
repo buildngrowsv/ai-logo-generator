@@ -70,7 +70,7 @@ export function SiteFooter() {
           <p className="text-xs text-gray-400">
             Copyright &copy; {currentYear} {siteConfig.siteName}. All rights reserved.
             {" · "}
-            <a href="https://symplyai.io" target="_blank" rel="noopener" className="hover:text-gray-200 transition-colors">Powered by SymplyAI</a>
+            <a href="https://symplyai.io/tools/" target="_blank" rel="noopener noreferrer" className="hover:text-gray-200 transition-colors">Powered by Symply AI</a>
           </p>
         </div>
       </div>

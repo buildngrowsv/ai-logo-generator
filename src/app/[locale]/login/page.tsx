@@ -26,6 +26,7 @@
  */
 "use client";
 
+import { ga4TrackOAuthProviderClick } from "@/lib/analytics/ga4-web-events";
 import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -49,6 +50,7 @@ function LoginForm() {
    * session creation, and final redirect to the callbackURL.
    */
   const handleGoogleSignIn = async () => {
+    ga4TrackOAuthProviderClick({ provider: "google", surface: "login" });
     await authClient.signIn.social({
       provider: "google",
       callbackURL: redirect,

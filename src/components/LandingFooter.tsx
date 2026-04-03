@@ -62,6 +62,8 @@ export function LandingFooter() {
           {/* Copyright */}
           <p className="text-sm text-text-muted">
             &copy; {currentYear} {siteConfig.siteName}. All rights reserved.
+            {" · "}
+            <a href="https://symplyai.io/tools/" target="_blank" rel="noopener noreferrer" className="hover:text-text-secondary transition-colors">Powered by Symply AI</a>
           </p>
         </div>
       </div>

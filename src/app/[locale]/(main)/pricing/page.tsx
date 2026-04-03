@@ -26,6 +26,7 @@
  */
 "use client";
 
+import { ga4TrackBeginCheckout } from "@/lib/analytics/ga4-web-events";
 import { useState } from "react";
 import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
@@ -86,6 +87,7 @@ export default function PricingPage() {
         throw new Error(data.error || "Checkout failed");
       }
       if (data.url) {
+        ga4TrackBeginCheckout({ priceId: priceId!, mode });
         window.location.href = data.url;
       } else {
         throw new Error("No checkout URL returned");

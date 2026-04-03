@@ -30,6 +30,11 @@ const REQUIRED_VARS = [
 ];
 
 const OPTIONAL_VARS = [
+  {
+    name: "NEXT_PUBLIC_GA_MEASUREMENT_ID",
+    description:
+      "GA4 Measurement ID (G-…); Next.js bakes this at build via @next/third-parties/google — verify live HTML with npm run verify:ga-gtag-prod",
+  },
   { name: "BETTER_AUTH_URL", description: "Explicit Better Auth base URL override (optional if NEXT_PUBLIC_APP_URL is correct)" },
   { name: "R2_ACCOUNT_ID", description: "Cloudflare R2 account ID" },
   { name: "R2_ACCESS_KEY_ID", description: "Cloudflare R2 access key" },

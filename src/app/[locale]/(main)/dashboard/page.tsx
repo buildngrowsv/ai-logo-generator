@@ -30,6 +30,7 @@ import { Badge } from "@/components/ui/badge";
 import { Link } from "@/i18n/navigation";
 import { authClient } from "@/lib/auth-client";
 import { siteConfig } from "@/config/site";
+import { ga4TrackPurchaseFromStripeReturn } from "@/lib/analytics/ga4-web-events";
 
 /**
  * Dashboard data shape — matches the /api/dashboard response.
@@ -43,6 +44,16 @@ interface DashboardData {
 export default function DashboardPage() {
   const { data: session } = authClient.useSession();
   const [dashData, setDashData] = useState<DashboardData | null>(null);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("checkout") !== "success") return;
+    const sid = params.get("session_id");
+    if (sid?.startsWith("cs_")) {
+      ga4TrackPurchaseFromStripeReturn({ transactionId: sid });
+    }
+  }, []);
 
   useEffect(() => {
     /**

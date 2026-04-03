@@ -232,7 +232,11 @@ export async function POST(request: NextRequest) {
       "line_items[0][quantity]": "1",
       // T018: embed token in success_url so client can capture it post-payment
       // and store in localStorage for use as x-pro-token header in generate requests
-      success_url: `${appUrl}/dashboard?checkout=success&token=${subscriptionToken}`,
+      /**
+       * Append Stripe `{CHECKOUT_SESSION_ID}` for GA4 purchase `transaction_id`
+       * while preserving T018 `token` for client entitlement capture.
+       */
+      success_url: `${appUrl}/dashboard?checkout=success&token=${subscriptionToken}&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${appUrl}/pricing?checkout=canceled`,
       allow_promotion_codes: "true",
       "metadata[userId]": userId,
