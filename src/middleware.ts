@@ -26,8 +26,11 @@ const PUBLIC_PATHS = [
   "/login",
   "/about",
   "/privacy-policy",
+  "/privacy",
   "/terms-of-service",
+  "/terms",
   "/refund-policy",
+  "/refund",
   "/gallery",
   /* SEO comparison pages — must be public for Google indexing */
   "/vs",
