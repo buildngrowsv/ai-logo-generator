@@ -6,6 +6,7 @@
  */
 import type { Metadata } from "next";
 import { GoogleAnalytics } from "@next/third-parties/google";
+import CookieConsent from "@/components/CookieConsent";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
@@ -146,6 +147,7 @@ export default async function LocaleLayout({ children, params }: Props) {
             {children}
           </NextIntlClientProvider>
         </AuthSessionProvider>
+        <CookieConsent />
       </body>
     </html>
   );
