@@ -96,12 +96,13 @@ const TAG_COLORS: Record<string, string> = {
   Payments: "bg-pink-500/10 text-pink-400 border-pink-500/20",
 };
 
-export default function ChangelogPage({
+export default async function ChangelogPage({
   params,
 }: {
-  params: { locale: string };
+  params: Promise<{ locale: string }>;
 }) {
-  setRequestLocale(params.locale);
+  const { locale } = await params;
+  setRequestLocale(locale);
 
   return (
     <div className="bg-background">
