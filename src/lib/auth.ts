@@ -95,7 +95,7 @@ export function getAuth() {
        * causing Better Auth to fail with "Invalid URL" during prerender.
        * Same root cause fixed in banananano2pro (commit 8e090ff, 2026-03-25).
        */
-      baseURL: (process.env.BETTER_AUTH_URL || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:4738").trim(),
+      baseURL: (process.env.BETTER_AUTH_URL || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:4837").trim(),
 
       /**
        * OAuth providers — Google only for launch.

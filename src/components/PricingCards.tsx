@@ -27,7 +27,7 @@
 
 "use client";
 
-import { useSession, signIn } from "next-auth/react";
+import { authClient } from "@/lib/auth-client";
 import { PRODUCT_CONFIG } from "@/lib/config";
 
 /**
@@ -166,7 +166,7 @@ function PricingCard({
 }
 
 export function PricingCards() {
-  const { data: session } = useSession();
+  const { data: session } = authClient.useSession();
 
   /**
    * handleTierSelection — Handles click on a pricing card CTA.
@@ -179,17 +179,23 @@ export function PricingCards() {
    * If they're not signed in, we trigger sign-in first with a callback URL
    * that includes the selected tier, so we can redirect to checkout after auth.
    */
-  const handleFreeTierClick = () => {
+  const handleFreeTierClick = async () => {
     if (session) {
       window.location.href = "/dashboard";
     } else {
-      signIn("google", { callbackUrl: "/dashboard" });
+      await authClient.signIn.social({
+        provider: "google",
+        callbackURL: "/dashboard",
+      });
     }
   };
 
   const handlePaidTierClick = async (tier: "basic" | "pro") => {
     if (!session) {
-      signIn("google", { callbackUrl: `/dashboard?upgrade=${tier}` });
+      await authClient.signIn.social({
+        provider: "google",
+        callbackURL: `/dashboard?upgrade=${tier}`,
+      });
       return;
     }
 

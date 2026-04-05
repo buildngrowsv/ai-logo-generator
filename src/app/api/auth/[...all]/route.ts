@@ -24,4 +24,33 @@
 import { auth } from "@/lib/auth";
 import { toNextJsHandler } from "better-auth/next-js";
 
-export const { POST, GET } = toNextJsHandler(auth);
+const handler = toNextJsHandler(auth);
+
+function isSessionRead(pathname: string) {
+  return pathname.endsWith("/session") || pathname.endsWith("/get-session");
+}
+
+function isClientLog(pathname: string) {
+  return pathname.endsWith("/_log");
+}
+
+export async function GET(request: Request) {
+  const pathname = new URL(request.url).pathname;
+  if (!process.env.DATABASE_URL && isSessionRead(pathname)) {
+    return Response.json(null);
+  }
+  return handler.GET(request);
+}
+
+export async function POST(request: Request) {
+  const pathname = new URL(request.url).pathname;
+  if (!process.env.DATABASE_URL) {
+    if (isSessionRead(pathname)) {
+      return Response.json(null);
+    }
+    if (isClientLog(pathname)) {
+      return new Response(null, { status: 204 });
+    }
+  }
+  return handler.POST(request);
+}

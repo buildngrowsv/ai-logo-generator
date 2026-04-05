@@ -24,11 +24,11 @@
 
 "use client";
 
-import { useSession, signIn } from "next-auth/react";
+import { authClient } from "@/lib/auth-client";
 import { PRODUCT_CONFIG } from "@/lib/config";
 
 export function LandingHero() {
-  const { data: session } = useSession();
+  const { data: session } = authClient.useSession();
 
   /**
    * handleGetStartedClick — Routes the user based on auth state.
@@ -37,11 +37,14 @@ export function LandingHero() {
    * dashboard/tool. If not, trigger the Google OAuth flow. This reduces
    * friction — authenticated users skip the sign-in step entirely.
    */
-  const handleGetStartedClick = () => {
+  const handleGetStartedClick = async () => {
     if (session) {
       window.location.href = "/dashboard";
     } else {
-      signIn("google", { callbackUrl: "/dashboard" });
+      await authClient.signIn.social({
+        provider: "google",
+        callbackURL: "/dashboard",
+      });
     }
   };
 

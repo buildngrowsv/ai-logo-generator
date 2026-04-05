@@ -32,17 +32,22 @@
  *
  * IMPORTANT:
  * The baseURL must match your deployment URL. In development, it defaults to
- * localhost:4738 (the port configured in this template's package.json scripts).
- * In production, set NEXT_PUBLIC_APP_URL to your domain.
+ * the current repo's local port. In production, set NEXT_PUBLIC_APP_URL to
+ * your domain.
  */
 import { createAuthClient } from "better-auth/react";
+
+const defaultBaseUrl =
+  process.env.NEXT_PUBLIC_APP_URL ??
+  (typeof window !== "undefined" ? window.location.origin : "http://localhost:4837");
 
 export const authClient = createAuthClient({
   /**
    * Base URL for auth API requests.
    * NEXT_PUBLIC_APP_URL should be set in .env.local for development
    * and in Vercel environment variables for production.
-   * Falls back to localhost:4738 which matches our dev port.
+   * Falls back to the current origin in the browser so local smoke/dev
+   * stays aligned even if the port changes between clones.
    */
-  baseURL: process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:4738",
+  baseURL: defaultBaseUrl,
 });
