@@ -5,8 +5,9 @@
  * strings that drifted in root metadata (Scout 13 branding note).
  */
 import type { Metadata } from "next";
-import { GoogleAnalytics } from "@next/third-parties/google";
+import GoogleAnalyticsLoader from "@/components/GoogleAnalytics";
 import CookieConsent from "@/components/CookieConsent";
+import { CookieConsentBanner } from "@/components/CookieConsentBanner";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
@@ -136,10 +137,8 @@ export default async function LocaleLayout({ children, params }: Props) {
         />
       </head>
       <body className="min-h-screen antialiased">
-        {/* GA4 — conditionally rendered; set NEXT_PUBLIC_GA_MEASUREMENT_ID in Vercel env to activate. */}
-        {process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID && (
-          <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID} />
-        )}
+        {/* GA4 with consent mode — GoogleAnalyticsLoader reads env var internally */}
+        <GoogleAnalyticsLoader />
         <AuthSessionProvider>
           <NextIntlClientProvider messages={messages}>
             {/* Language switcher — EN | ES toggle, visible on all pages */}
@@ -147,6 +146,7 @@ export default async function LocaleLayout({ children, params }: Props) {
             {children}
           </NextIntlClientProvider>
         </AuthSessionProvider>
+        <CookieConsentBanner />
         <CookieConsent />
       </body>
     </html>
