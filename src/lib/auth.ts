@@ -20,6 +20,8 @@
  * Created: 2026-03-24 by Builder 4 for LogoForge AI clone
  */
 import { betterAuth } from "better-auth";
+import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { getDb } from "@/db";
 
 /**
  * LAZY AUTH SINGLETON — Better Auth with Google OAuth and database session storage.
@@ -66,10 +68,14 @@ export function getAuth() {
        * Better Auth auto-creates its own tables (user, session, account, verification)
        * on first use. These are separate from our app tables in db/schema/.
        */
-      database: {
-        type: "postgres",
-        url: process.env.DATABASE_URL || "",
-      },
+      /**
+       * FIX (Vanguard-7742, 2026-04-05): Switched from simple { type: "postgres", url }
+       * to drizzleAdapter. Better Auth v1.5.x's simple postgres adapter requires Kysely
+       * internals that fail silently on Vercel serverless. The drizzleAdapter uses the
+       * same Neon HTTP driver as our existing db/index.ts — proven to work in this stack.
+       * Matches the pattern used in banananano2pro (which works with Better Auth).
+       */
+      database: drizzleAdapter(getDb(), { provider: "pg" }),
 
       /**
        * Secret for signing session tokens.
