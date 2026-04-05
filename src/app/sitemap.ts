@@ -27,7 +27,7 @@ const BASE_URL = siteConfig.siteUrl.replace(/\/$/, "");
  */
 export default function sitemap(): MetadataRoute.Sitemap {
   const lastModified = new Date();
-  const paths = ["", "/pricing", "/login", "/gallery", "/about"];
+  const paths = ["", "/pricing", "/login", "/gallery", "/about", "/vs/looka", "/vs/canva", "/vs/brandmark"];
   const entries: MetadataRoute.Sitemap = [];
   for (const path of paths) {
     entries.push({
