@@ -109,14 +109,7 @@ export default function PricingPage() {
             </span>
           </h1>
           <p className="mt-4 text-lg text-muted-foreground">
-            Choose a subscription or buy credits once this deployment's auth, Stripe, webhook, and price configuration is complete.
-          </p>
-
-          <p className="mx-auto mt-4 max-w-3xl rounded-lg border border-border/60 bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
-            Self-serve checkout only works on deployments with working auth, `NEXT_PUBLIC_APP_URL`,
-            Stripe secret + webhook secrets, and the published price IDs configured together.
-            This page disables purchase buttons when a published price ID is missing, and the checkout
-            API still fails closed if auth or the remaining Stripe runtime contract is incomplete.
+            Choose a plan that fits your needs. Start with free credits, upgrade anytime.
           </p>
 
           {/* Billing toggle — Monthly vs Annual */}
