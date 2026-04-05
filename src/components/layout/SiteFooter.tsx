@@ -15,6 +15,7 @@
  */
 import { Link } from "@/i18n/navigation";
 import { siteConfig } from "@/config/site";
+import { RelatedToolsFooterSection } from "@/components/RelatedToolsFooterSection";
 
 export function SiteFooter() {
   /**
@@ -64,6 +65,9 @@ export function SiteFooter() {
             </div>
           ))}
         </div>
+
+        {/* Cross-links to sibling AI tools — SEO internal linking */}
+        <RelatedToolsFooterSection currentSiteUrl="https://generateailogo.com" />
 
         {/* Copyright */}
         <div className="mt-12 pt-8 border-t border-gray-800/60 text-center">
