@@ -113,9 +113,21 @@ export function getAuth() {
  * The Proxy intercepts property access and ensures the real instance exists first.
  */
 /* eslint-disable @typescript-eslint/no-explicit-any */
+/**
+ * FIX (Vanguard-7742, 2026-04-05): Added `has` trap to the Proxy.
+ * toNextJsHandler() from better-auth/next-js checks property existence
+ * with `'handler' in auth` (the `in` operator), which triggers the `has`
+ * trap. Without it, the check returns false for every property (because
+ * the target is an empty object), and toNextJsHandler fails to wire the
+ * route handlers — resulting in HTTP 500 on every auth endpoint.
+ * banananano2pro (which works) already had this trap.
+ */
 export const auth: any = new Proxy({} as any, {
   get(_target: any, prop: string | symbol) {
-    return getAuth()[prop as keyof typeof _auth];
+    return (getAuth() as unknown as Record<string | symbol, unknown>)[prop];
+  },
+  has(_target: any, prop: string | symbol) {
+    return prop in (getAuth() as unknown as Record<string | symbol, unknown>);
   },
 });
 /* eslint-enable @typescript-eslint/no-explicit-any */
