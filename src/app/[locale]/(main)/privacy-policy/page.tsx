@@ -19,7 +19,18 @@ const COPY = {
         heading: "How we use information",
         body: [
           "We use submitted data to authenticate users, process payments, generate requested logo outputs, prevent abuse, and support customers.",
-          "We do not sell personal information. Data may be processed by infrastructure providers that help us deliver hosting, authentication, payments, and AI inference.",
+          "We do not sell personal information.",
+        ],
+      },
+      {
+        heading: "Data Processors",
+        body: [
+          "We use the following third-party services to operate LogoForge AI. Each processor handles data only as needed for its stated purpose:",
+          "Google Analytics 4 (Google LLC, USA) — Collects anonymized usage data. You can opt out via the cookie consent banner.",
+          "Stripe (Stripe, Inc., USA) — Processes payment information securely. Your payment data is handled directly by Stripe and not stored on our servers.",
+          "fal.ai (fal.ai, Inc., USA) — Processes your text prompts and brand details to generate AI logo outputs. Uploaded content is processed temporarily and not retained.",
+          "Vercel (Vercel Inc., USA) — Hosts and serves the application. Standard web server logs may be collected.",
+          "Google OAuth (Google LLC, USA) — Provides authentication when you sign in with Google.",
         ],
       },
       {
@@ -48,7 +59,18 @@ const COPY = {
         heading: "Cómo usamos la información",
         body: [
           "Usamos los datos enviados para autenticar usuarios, procesar pagos, generar los logotipos solicitados, prevenir abuso y dar soporte al cliente.",
-          "No vendemos información personal. Los datos pueden ser procesados por proveedores de infraestructura que nos ayudan con hosting, autenticación, pagos e inferencia de IA.",
+          "No vendemos información personal.",
+        ],
+      },
+      {
+        heading: "Procesadores de datos",
+        body: [
+          "Utilizamos los siguientes servicios de terceros para operar LogoForge AI. Cada procesador maneja datos solo según sea necesario para su propósito declarado:",
+          "Google Analytics 4 (Google LLC, EE.UU.) — Recopila datos de uso anonimizados. Puede desactivarlo a través del banner de consentimiento de cookies.",
+          "Stripe (Stripe, Inc., EE.UU.) — Procesa información de pago de forma segura. Sus datos de pago son manejados directamente por Stripe y no se almacenan en nuestros servidores.",
+          "fal.ai (fal.ai, Inc., EE.UU.) — Procesa sus indicaciones de texto y detalles de marca para generar logotipos con IA. El contenido se procesa temporalmente y no se retiene.",
+          "Vercel (Vercel Inc., EE.UU.) — Aloja y sirve la aplicación. Se pueden recopilar registros estándar del servidor web.",
+          "Google OAuth (Google LLC, EE.UU.) — Proporciona autenticación cuando inicia sesión con Google.",
         ],
       },
       {

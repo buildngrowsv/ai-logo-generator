@@ -1,5 +1,6 @@
-User-agent: *
+User-Agent: *
 Allow: /
 Disallow: /api/
-Disallow: /dashboard/
-Sitemap: https://logo.symplyai.io/sitemap.xml
+Disallow: /_next/
+
+Sitemap: https://generateailogo.com/sitemap.xml

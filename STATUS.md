@@ -1,12 +1,13 @@
 # LogoForge AI — AI Logo Generator — STATUS
 
-**Last updated:** 2026-03-31 (Builder 2 — `bs-mail` Scout 4 **`RELEASE` ~1774994114`: GA4 Admin **streams table** / wizard path for **`logo.symplyai.io`**; prod HTML still **no** gtag until Vercel **`NEXT_PUBLIC_GA_ID`**)
+**Last updated:** 2026-04-04 (Vector-1729 — verified live custom domain, GA4 loader, consent banner, and Search Console ownership for `https://generateailogo.com/`; retained `logo.symplyai.io` as a working alias)
 **Repo:** github.com/buildngrowsv/ai-logo-generator
 **Stack:** Next.js 15 + fal.ai FLUX + Stripe + Better Auth + Drizzle/Neon + Tailwind 4
 
 ## Production URLs
 
-- **Primary:** https://logo.symplyai.io (HTTP 200 ✅)
+- **Primary:** https://generateailogo.com (HTTP 200 ✅)
+- **Alias:** https://logo.symplyai.io (HTTP 200 ✅)
 - **Vercel:** https://ai-logo-generator.vercel.app
 
 ## Dev / Preview URL (develop branch)
@@ -28,10 +29,10 @@
 | auth.ts baseURL trim | DONE ✅ | .trim() strips trailing \n from BETTER_AUTH_URL (commit ddec3c6) |
 | SEO | DONE ✅ | Unique metadata, JSON-LD structured data, targeted keywords |
 | Build | PASSES ✅ | Next.js 15.5.14, 25 static pages |
-| Deploy | LIVE ✅ | logo.symplyai.io |
+| Deploy | LIVE ✅ | generateailogo.com |
 | FAL_KEY | SET ✅ | Production env var set on Vercel |
-| symplyai.io subdomain | LIVE ✅ | logo.symplyai.io CNAME → cname.vercel-dns.com |
-| **GA4 (web)** | **CODE READY** ✅ | **`layout.tsx`** mounts **`@next/third-parties/google`** when **`NEXT_PUBLIC_GA_ID`** set; **`src/lib/analytics/ga4-web-events.ts`** — **`oauth_signin_click`**, **`begin_checkout`**, Stripe-return **`purchase`**, **`logo_generation_requested`** (studio + email-gate paths; **style only**, no business name in GA params — 2026-03-31); **`.env.example`** + **`npm run verify:ga-gtag-prod`**. **Scout 4 (`bs-mail` ~1774994114, RCC `43a284c2`):** **GA4** **wizard + streams table** progressed for **`logo.symplyai.io`** — **prod `curl` still no `G-`** until **Vercel `NEXT_PUBLIC_GA_ID`** + **redeploy**. **SoT:** **`BUILDER2-OPERATOR-ANALYTICS-PICK-FIVE-2026-03-31.md`**, **`REVIEWER5-OPERATOR-FIVE-PROJECT-ANALYTICS-FINISH-2026-03-31.md`**. |
+| symplyai.io subdomain | LIVE ✅ | `logo.symplyai.io` serves the same app as a working alias |
+| **GA4 (web)** | **LIVE VERIFIED** ✅ | **`src/components/GoogleAnalytics.tsx`** loads GA4 only when the public measurement ID is set and applies Consent Mode defaults (`analytics_storage: denied`) before `gtag("config")`. **`src/components/CookieConsentBanner.tsx`** mounts the visible accept/reject banner and replays stored choice. On 2026-04-04, live HTML on **`https://generateailogo.com/`** and **`https://logo.symplyai.io/`** both included the GA loader for **`G-0NW1041TSN`**, and Search Console confirmed **`https://generateailogo.com/`** as **`siteOwner`**. |
 
 ## Environment Variables (Vercel Production)
 
@@ -46,10 +47,10 @@
 | `NEXT_PUBLIC_STRIPE_PRICE_STARTER_PACK` | ✅ Set | (5 Logos $9.90) |
 | `NEXT_PUBLIC_STRIPE_PRICE_GROWTH_PACK` | ✅ Set | (25 Logos $29.90) |
 | `NEXT_PUBLIC_STRIPE_PRICE_PROFESSIONAL_PACK` | ✅ Set | (100 Logos $79.90) |
-| `BETTER_AUTH_URL` | ✅ Set | https://logo.symplyai.io |
+| `BETTER_AUTH_URL` | VERIFY (BC1) | Public canonical currently resolves as `https://generateailogo.com`; verify the env value in Vercel before rotating auth config |
 | `BETTER_AUTH_SECRET` | ✅ Set | Generated secret |
-| `NEXT_PUBLIC_APP_URL` | ✅ Set | https://logo.symplyai.io |
-| `NEXT_PUBLIC_GA_ID` | **VERIFY (BC1)** | **Not** confirmed in this STATUS row — set to **`G-…`** from **GA4 Admin** Web stream for **`logo.symplyai.io`** per **`REVIEWER5-OPERATOR-FIVE-PROJECT-ANALYTICS-FINISH-2026-03-31.md`**. |
+| `NEXT_PUBLIC_APP_URL` | VERIFY (BC1) | Public canonical currently resolves as `https://generateailogo.com`; verify the env value in Vercel before rotating domain config |
+| `NEXT_PUBLIC_GA_ID` | ✅ Live | Live production HTML loads **`https://www.googletagmanager.com/gtag/js?id=G-0NW1041TSN`** on `generateailogo.com` and the alias domain |
 | `DATABASE_URL` | ❌ MISSING | **BLOCKER** — Neon Postgres needed for user auth/credits |
 | `GOOGLE_CLIENT_ID` | ❌ MISSING | **BLOCKER** — Google OAuth broken without this |
 | `GOOGLE_CLIENT_SECRET` | ❌ MISSING | **BLOCKER** — Google OAuth broken without this |
@@ -57,7 +58,7 @@
 
 ## What Works Right Now
 
-- Landing page renders fully ✅ (HTTP 200 verified)
+- Landing page renders fully ✅ (HTTP 200 verified on `generateailogo.com`)
 - Pricing page renders with real price IDs ✅ (3 subs + 3 packs configured)
 - POST /api/stripe/checkout-session → returns real cs_live_ Stripe checkout URL ✅ (verified 2026-03-25)
 - POST /api/stripe/webhook → correctly rejects missing/invalid signatures ✅
@@ -67,8 +68,8 @@
 ## What Requires BCL/Dashboard Work
 
 1. **DATABASE_URL** — Create Neon Postgres project for ai-logo-generator, run `npm run db:push` to create schema, set DATABASE_URL on Vercel
-2. **GOOGLE_CLIENT_ID/SECRET** — Add logo.symplyai.io to Google Cloud Console OAuth credentials (authorized origins + redirect URIs: `https://logo.symplyai.io/api/auth/callback/google`)
-3. **STRIPE_WEBHOOK_SECRET** — Add webhook endpoint `https://logo.symplyai.io/api/stripe/webhook` in Stripe dashboard, copy whsec_ to Vercel
+2. **GOOGLE_CLIENT_ID/SECRET** — Add `https://generateailogo.com` to Google Cloud Console OAuth credentials (authorized origins + redirect URIs: `https://generateailogo.com/api/auth/callback/google`). Keep `logo.symplyai.io` only if the alias still needs interactive auth.
+3. **STRIPE_WEBHOOK_SECRET** — Add webhook endpoint `https://generateailogo.com/api/stripe/webhook` in Stripe dashboard, copy whsec_ to Vercel
 
 ## Critical Bug Fixes Applied (Builder 6, 2026-03-25)
 
