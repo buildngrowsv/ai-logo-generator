@@ -1,5 +1,23 @@
+import type { Metadata } from "next";
 import { setRequestLocale } from "next-intl/server";
 import { PolicyPage } from "@/components/legal/PolicyPage";
+
+const SITE_URL = process.env.NEXT_PUBLIC_APP_URL || "https://generateailogo.com";
+
+export const metadata: Metadata = {
+  title: "Refund Policy | LogoForge AI",
+  description:
+    "Refund policy for LogoForge AI — how we handle refunds for subscriptions and credit purchases.",
+  alternates: { canonical: `${SITE_URL}/refund-policy` },
+  openGraph: {
+    title: "Refund Policy | LogoForge AI",
+    description:
+      "Refund policy for LogoForge AI — how we handle refunds for subscriptions and credit purchases.",
+    url: `${SITE_URL}/refund-policy`,
+    type: "website",
+    images: [{ url: "/opengraph-image", width: 1200, height: 630 }],
+  },
+};
 
 const COPY = {
   en: {

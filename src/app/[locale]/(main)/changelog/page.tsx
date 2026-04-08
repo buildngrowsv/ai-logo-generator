@@ -11,11 +11,21 @@ import type { Metadata } from "next";
 import { setRequestLocale } from "next-intl/server";
 import Link from "next/link";
 
+const SITE_URL = process.env.NEXT_PUBLIC_APP_URL || "https://generateailogo.com";
+
 export const metadata: Metadata = {
   title: "Changelog — What's New | LogoForge AI",
   description:
     "See the latest features, improvements, and fixes in LogoForge AI. Updated regularly with new models, tools, and platform improvements.",
-  alternates: { canonical: "https://generateailogo.com/changelog" },
+  alternates: { canonical: `${SITE_URL}/changelog` },
+  openGraph: {
+    title: "Changelog — What's New | LogoForge AI",
+    description:
+      "See the latest features, improvements, and fixes in LogoForge AI. Updated regularly with new models, tools, and platform improvements.",
+    url: `${SITE_URL}/changelog`,
+    type: "website",
+    images: [{ url: "/opengraph-image", width: 1200, height: 630 }],
+  },
 };
 
 /**

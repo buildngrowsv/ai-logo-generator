@@ -42,7 +42,7 @@ export const metadata: Metadata = {
     "cheap logo design AI",
     "logo generator no watermark",
   ],
-  alternates: { canonical: "/vs/looka" },
+  alternates: { canonical: `${SITE_ORIGIN}/vs/looka` },
   openGraph: {
     title: "LogoForge AI vs Looka (2026) — Free AI Logo Alternative",
     description:

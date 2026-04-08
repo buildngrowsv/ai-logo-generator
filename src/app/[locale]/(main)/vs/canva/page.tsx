@@ -42,7 +42,7 @@ export const metadata: Metadata = {
     "best AI logo maker 2026",
     "dedicated logo generator",
   ],
-  alternates: { canonical: "/vs/canva" },
+  alternates: { canonical: `${SITE_ORIGIN}/vs/canva` },
   openGraph: {
     title: "LogoForge AI vs Canva Logo Maker (2026)",
     description:

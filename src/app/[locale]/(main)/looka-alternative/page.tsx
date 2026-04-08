@@ -18,7 +18,7 @@ export const metadata: Metadata = {
     "logoforge vs looka",
     "cheap ai logo generator",
   ],
-  alternates: { canonical: canonicalPath },
+  alternates: { canonical: `https://generateailogo.com${canonicalPath}` },
   openGraph: {
     title: pageTitle,
     description: pageDescription,

@@ -12,10 +12,21 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { setRequestLocale } from "next-intl/server";
 
+const SITE_URL = process.env.NEXT_PUBLIC_APP_URL || "https://generateailogo.com";
+
 export const metadata: Metadata = {
   title: "About | AI Logo Generator",
   description:
     "Learn about AI Logo Generator — create professional logos using AI. Upload concepts or describe your brand, get multiple logo options instantly.",
+  alternates: { canonical: `${SITE_URL}/about` },
+  openGraph: {
+    title: "About | AI Logo Generator",
+    description:
+      "Learn about AI Logo Generator — create professional logos using AI. Upload concepts or describe your brand, get multiple logo options instantly.",
+    url: `${SITE_URL}/about`,
+    type: "website",
+    images: [{ url: "/opengraph-image", width: 1200, height: 630 }],
+  },
 };
 
 export default async function AboutPage({

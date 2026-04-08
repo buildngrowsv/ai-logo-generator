@@ -8,9 +8,27 @@
  *
  * Created: 2026-03-24 by Builder 4 (pane1774 swarm)
  */
+import type { Metadata } from "next";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "@/i18n/navigation";
+
+const SITE_URL = process.env.NEXT_PUBLIC_APP_URL || "https://generateailogo.com";
+
+export const metadata: Metadata = {
+  title: "Logo Gallery — Style Examples | LogoForge AI",
+  description:
+    "Explore AI logo style categories with example businesses. See what Minimalist, Tech, Luxury, Playful, and other logo styles look like before generating your own.",
+  alternates: { canonical: `${SITE_URL}/gallery` },
+  openGraph: {
+    title: "Logo Gallery — Style Examples | LogoForge AI",
+    description:
+      "Explore AI logo style categories with example businesses. See what Minimalist, Tech, Luxury, Playful, and other logo styles look like before generating your own.",
+    url: `${SITE_URL}/gallery`,
+    type: "website",
+    images: [{ url: "/opengraph-image", width: 1200, height: 630 }],
+  },
+};
 
 /**
  * Example prompts that demonstrate what each style category produces.

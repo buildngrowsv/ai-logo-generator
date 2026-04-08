@@ -1,6 +1,18 @@
-export const metadata = {
+import type { Metadata } from "next";
+
+const SITE_URL = process.env.NEXT_PUBLIC_APP_URL || "https://generateailogo.com";
+
+export const metadata: Metadata = {
   title: "Refund Policy | AI Logo Generator",
   description: "Refund policy for AI Logo Generator.",
+  alternates: { canonical: `${SITE_URL}/refund-policy` },
+  openGraph: {
+    title: "Refund Policy | AI Logo Generator",
+    description: "Refund policy for AI Logo Generator.",
+    url: `${SITE_URL}/refund-policy`,
+    type: "website",
+    images: [{ url: "/opengraph-image", width: 1200, height: 630 }],
+  },
 };
 
 export default function RefundPolicyPage() {

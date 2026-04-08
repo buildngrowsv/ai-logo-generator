@@ -26,6 +26,14 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "https://generateailogo.com/vs",
   },
+  openGraph: {
+    title: "LogoForge AI vs Competitors — AI Logo Generator Comparisons",
+    description:
+      "See how LogoForge AI compares to Looka, Brandmark, Canva, and other popular AI logo generators. Honest feature, pricing, and quality comparisons.",
+    url: "https://generateailogo.com/vs",
+    type: "website",
+    images: [{ url: "/opengraph-image", width: 1200, height: 630 }],
+  },
 };
 
 /**

@@ -18,7 +18,7 @@ export const metadata: Metadata = {
     "logo generator no design skills",
     "best free ai logo tool",
   ],
-  alternates: { canonical: canonicalPath },
+  alternates: { canonical: `https://generateailogo.com${canonicalPath}` },
   openGraph: {
     title: pageTitle,
     description: pageDescription,

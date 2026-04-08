@@ -1,5 +1,23 @@
+import type { Metadata } from "next";
 import { setRequestLocale } from "next-intl/server";
 import { PolicyPage } from "@/components/legal/PolicyPage";
+
+const SITE_URL = process.env.NEXT_PUBLIC_APP_URL || "https://generateailogo.com";
+
+export const metadata: Metadata = {
+  title: "Terms of Service | LogoForge AI",
+  description:
+    "Terms of service for LogoForge AI — usage rules, billing, outputs, and disclaimers.",
+  alternates: { canonical: `${SITE_URL}/terms-of-service` },
+  openGraph: {
+    title: "Terms of Service | LogoForge AI",
+    description:
+      "Terms of service for LogoForge AI — usage rules, billing, outputs, and disclaimers.",
+    url: `${SITE_URL}/terms-of-service`,
+    type: "website",
+    images: [{ url: "/opengraph-image", width: 1200, height: 630 }],
+  },
+};
 
 const COPY = {
   en: {

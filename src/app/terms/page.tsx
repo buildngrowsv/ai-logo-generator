@@ -8,10 +8,21 @@
  */
 import { Metadata } from "next";
 
+const SITE_URL = process.env.NEXT_PUBLIC_APP_URL || "https://generateailogo.com";
+
 export const metadata: Metadata = {
   title: "Terms of Service | LogoForge AI",
   description:
     "Terms of service for LogoForge AI — usage rules, billing, and disclaimers.",
+  alternates: { canonical: `${SITE_URL}/terms` },
+  openGraph: {
+    title: "Terms of Service | LogoForge AI",
+    description:
+      "Terms of service for LogoForge AI — usage rules, billing, and disclaimers.",
+    url: `${SITE_URL}/terms`,
+    type: "website",
+    images: [{ url: "/opengraph-image", width: 1200, height: 630 }],
+  },
 };
 
 export default function TermsPage() {

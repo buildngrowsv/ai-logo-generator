@@ -13,10 +13,21 @@
  */
 import { Metadata } from "next";
 
+const SITE_URL = process.env.NEXT_PUBLIC_APP_URL || "https://generateailogo.com";
+
 export const metadata: Metadata = {
   title: "Privacy Policy | LogoForge AI",
   description:
     "Privacy policy for LogoForge AI — what we collect, how we use it, and how to contact us.",
+  alternates: { canonical: `${SITE_URL}/privacy` },
+  openGraph: {
+    title: "Privacy Policy | LogoForge AI",
+    description:
+      "Privacy policy for LogoForge AI — what we collect, how we use it, and how to contact us.",
+    url: `${SITE_URL}/privacy`,
+    type: "website",
+    images: [{ url: "/opengraph-image", width: 1200, height: 630 }],
+  },
 };
 
 export default function PrivacyPage() {

@@ -1,5 +1,23 @@
+import type { Metadata } from "next";
 import { setRequestLocale } from "next-intl/server";
 import { PolicyPage } from "@/components/legal/PolicyPage";
+
+const SITE_URL = process.env.NEXT_PUBLIC_APP_URL || "https://generateailogo.com";
+
+export const metadata: Metadata = {
+  title: "Privacy Policy | LogoForge AI",
+  description:
+    "Privacy policy for LogoForge AI — what we collect, how we use it, data processors, and how to contact us about privacy questions.",
+  alternates: { canonical: `${SITE_URL}/privacy-policy` },
+  openGraph: {
+    title: "Privacy Policy | LogoForge AI",
+    description:
+      "Privacy policy for LogoForge AI — what we collect, how we use it, data processors, and how to contact us about privacy questions.",
+    url: `${SITE_URL}/privacy-policy`,
+    type: "website",
+    images: [{ url: "/opengraph-image", width: 1200, height: 630 }],
+  },
+};
 
 const COPY = {
   en: {

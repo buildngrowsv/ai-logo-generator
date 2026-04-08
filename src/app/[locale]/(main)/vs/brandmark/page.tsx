@@ -42,7 +42,7 @@ export const metadata: Metadata = {
     "brandmark pricing too expensive",
     "logo maker subscription",
   ],
-  alternates: { canonical: "/vs/brandmark" },
+  alternates: { canonical: `${SITE_ORIGIN}/vs/brandmark` },
   openGraph: {
     title: "LogoForge AI vs Brandmark (2026) — $4.90/mo vs $25-$175 per Logo",
     description:
