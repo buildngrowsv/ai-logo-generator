@@ -42,7 +42,18 @@ import { siteConfig } from "@/config/site";
  */
 function LoginForm() {
   const searchParams = useSearchParams();
-  const redirect = searchParams.get("redirect") || "/dashboard";
+  const rawRedirect = searchParams.get("redirect") || "/dashboard";
+
+  /**
+   * Sanitize the redirect URL to prevent open redirect attacks.
+   * Only allow relative paths starting with "/" (not "//").
+   * Rejects absolute URLs like https://evil.com that could hijack
+   * post-auth navigation.
+   */
+  const redirect =
+    rawRedirect.startsWith("/") && !rawRedirect.startsWith("//")
+      ? rawRedirect
+      : "/dashboard";
 
   /**
    * Initiate Google OAuth sign-in flow.
