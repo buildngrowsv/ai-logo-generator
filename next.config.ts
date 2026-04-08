@@ -79,6 +79,26 @@ const nextConfig: NextConfig = {
       bodySizeLimit: "10mb",
     },
   },
+
+  /**
+   * Baseline security headers applied to every route (T16, fleet sync 2026-04-08).
+   * Conservative defaults: no CSP here because Stripe.js, fal.media, and Next.js
+   * inline bootstraps vary per clone — each clone owner can add a CSP (or
+   * Report-Only) after measuring. These four are safe universal defaults.
+   */
+  async headers() {
+    return [
+      {
+        source: "/:path*",
+        headers: [
+          { key: "X-Frame-Options", value: "DENY" },
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+        ],
+      },
+    ];
+  },
 };
 
 export default withNextIntl(nextConfig);
