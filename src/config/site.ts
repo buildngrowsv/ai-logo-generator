@@ -42,7 +42,7 @@ export const siteConfig = {
    * Production URL — will be set once deployed to Vercel with custom domain.
    * In development, NEXT_PUBLIC_APP_URL env var overrides this.
    */
-  siteUrl: process.env.NEXT_PUBLIC_APP_URL || "https://generateailogo.com",
+  siteUrl: process.env.NEXT_PUBLIC_APP_URL?.trim() || "https://generateailogo.com",
 
   /**
    * Support email — displayed in the footer and used for mailto: links.
