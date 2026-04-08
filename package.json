@@ -14,7 +14,8 @@
     "test:smoke": "playwright test tests/smoke",
     "test:e2e": "playwright test tests/e2e",
     "test:all": "playwright test",
-    "verify:ga-gtag-prod": "node scripts/verify-production-html-shows-ga4-gtag.mjs"
+    "verify:ga-gtag-prod": "node scripts/verify-production-html-shows-ga4-gtag.mjs",
+    "env:validate": "node scripts/validate-env-configuration.mjs"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1015.0",
