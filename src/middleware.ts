@@ -10,6 +10,52 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { routing } from "./i18n/routing";
 
+/* ─── Auth Rate Limiter (credential stuffing prevention) ───────────────────
+ * In-memory sliding window: max 10 requests per 60 s per client IP on
+ * sensitive auth endpoints (sign-in, sign-up, password reset, OAuth callback).
+ * Returns 429 with Retry-After header when exceeded.
+ * Self-contained — no external imports needed.
+ */
+interface AuthRateLimitEntry { count: number; windowStart: number; }
+const AUTH_RATE_LIMIT_MAP = new Map<string, AuthRateLimitEntry>();
+const AUTH_RATE_LIMIT_MAX = 10;
+const AUTH_RATE_LIMIT_WINDOW_MS = 60_000;
+
+const SENSITIVE_AUTH_PATHS = [
+  "/api/auth/signin", "/api/auth/sign-in",
+  "/api/auth/signup", "/api/auth/sign-up",
+  "/api/auth/callback",
+  "/api/auth/forget-password", "/api/auth/reset-password",
+];
+
+function extractClientIpFromMiddleware(request: NextRequest): string {
+  const forwarded = request.headers.get("x-forwarded-for");
+  if (forwarded) return forwarded.split(",")[0].trim();
+  return request.headers.get("x-real-ip") ?? "unknown";
+}
+
+function checkAuthRateLimit(request: NextRequest): NextResponse | null {
+  const { pathname } = request.nextUrl;
+  const isSensitive = SENSITIVE_AUTH_PATHS.some((p) => pathname.startsWith(p));
+  if (!isSensitive) return null;
+  const ip = extractClientIpFromMiddleware(request);
+  const now = Date.now();
+  const entry = AUTH_RATE_LIMIT_MAP.get(ip);
+  if (!entry || now - entry.windowStart > AUTH_RATE_LIMIT_WINDOW_MS) {
+    AUTH_RATE_LIMIT_MAP.set(ip, { count: 1, windowStart: now });
+    return null;
+  }
+  entry.count++;
+  if (entry.count > AUTH_RATE_LIMIT_MAX) {
+    const retryAfter = Math.ceil((entry.windowStart + AUTH_RATE_LIMIT_WINDOW_MS - now) / 1000);
+    return NextResponse.json(
+      { error: "Too many authentication attempts. Please try again later." },
+      { status: 429, headers: { "Retry-After": String(retryAfter) } }
+    );
+  }
+  return null;
+}
+
 const intlMiddleware = createMiddleware(routing);
 
 function stripLocalePrefix(pathname: string): string {
@@ -62,6 +108,12 @@ function isStaticAssetPath(pathname: string): boolean {
 
 export default function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  // Rate-limit sensitive auth endpoints before allowing them through
+  if (pathname.startsWith("/api/auth")) {
+    const rateLimitResponse = checkAuthRateLimit(request);
+    if (rateLimitResponse) return rateLimitResponse;
+  }
 
   if (pathname.startsWith("/api")) {
     return NextResponse.next();
