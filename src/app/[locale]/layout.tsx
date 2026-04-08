@@ -27,7 +27,7 @@ type Props = { children: React.ReactNode; params: Promise<{ locale: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params;
-  if (!routing.locales.includes(locale as "en" | "es")) {
+  if (!routing.locales.includes(locale as "en" | "es" | "fr" | "de" | "pt")) {
     notFound();
   }
   const t = await getTranslations({ locale, namespace: "Meta" });
@@ -118,7 +118,7 @@ const jsonLdFaq = {
 
 export default async function LocaleLayout({ children, params }: Props) {
   const { locale } = await params;
-  if (!routing.locales.includes(locale as "en" | "es")) {
+  if (!routing.locales.includes(locale as "en" | "es" | "fr" | "de" | "pt")) {
     notFound();
   }
   setRequestLocale(locale);

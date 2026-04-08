@@ -1,0 +1,137 @@
+{
+  "Meta": {
+    "title": "Gerador de Logotipos IA | LogoForge AI — Logos Profissionais em Segundos",
+    "description": "Crie logos profissionais impressionantes em segundos com IA. Digite o nome da sua marca, escolha um estilo e obtenha variações ilimitadas. Gratuito para experimentar.",
+    "keywordList": [
+      "gerador de logo IA",
+      "criador de logotipo inteligência artificial",
+      "design de logo IA",
+      "logo para empresa IA",
+      "gerador de marca logo",
+      "logo grátis IA",
+      "logo profissional IA"
+    ],
+    "ogTitle": "Gerador de Logotipos IA | LogoForge AI",
+    "ogDescription": "Gere logos com IA. Escolha um estilo, insira o nome da sua marca e baixe instantaneamente.",
+    "siteName": "LogoForge AI",
+    "twitterTitle": "Gerador de Logotipos IA — LogoForge AI",
+    "twitterDescription": "Crie logos impressionantes com IA. Gratuito para experimentar."
+  },
+  "Nav": {
+    "studio": "Criar Logo",
+    "gallery": "Galeria",
+    "pricing": "Preços",
+    "dashboard": "Painel",
+    "signIn": "Entrar",
+    "signOut": "Sair",
+    "account": "Conta"
+  },
+  "Home": {
+    "siteDescription": "Crie logos profissionais impressionantes em segundos com IA. Digite o nome da sua empresa, escolha um estilo e obtenha variações ilimitadas.",
+    "getStarted": "Começar",
+    "viewPricing": "Ver preços",
+    "whyChoose": "Por que escolher {name}",
+    "builtForSpeed": "Velocidade, segurança e escalabilidade prontos para produção.",
+    "everythingTitle": "Tudo o que você precisa",
+    "everythingSubtitle": "Infraestrutura pronta para produção para que você se concentre no seu produto.",
+    "pricingTitle": "Preços simples e transparentes",
+    "pricingSubtitle": "Escolha um plano que se adapte às suas necessidades.",
+    "popular": "Popular",
+    "creditsMo": "créditos/mês",
+    "viewDetails": "Ver detalhes",
+    "seeFullPricing": "Ver preços completos e pacotes de créditos →",
+    "faqTitle": "Perguntas frequentes",
+    "finalTitle": "Pronto para começar?",
+    "finalSubtitle": "Cadastre-se em segundos. Sem necessidade de cartão de crédito.",
+    "getStartedFree": "Começar gratuitamente",
+    "valueProps": [
+      {
+        "iconName": "Rocket",
+        "title": "10× mais rápido que um designer",
+        "description": "O que um freelancer faz em dias e cobra caro, a LogoForge AI entrega em segundos por menos de R$25. Mesma qualidade visual, entrega instantânea."
+      },
+      {
+        "iconName": "Sparkles",
+        "title": "Opções criativas ilimitadas",
+        "description": "Gere dezenas de variações em 8 categorias de estilo. Explore até encontrar o logo perfeito para sua marca."
+      },
+      {
+        "iconName": "ShieldCheck",
+        "title": "Direitos comerciais completos",
+        "description": "Cada logo é seu para uso comercial, sem atribuição obrigatória ou taxas ocultas."
+      }
+    ],
+    "features": [
+      {
+        "iconName": "Wand2",
+        "title": "Design com IA",
+        "description": "O modelo FLUX de última geração cria logos profissionais a partir do nome e estilo da sua marca."
+      },
+      {
+        "iconName": "Palette",
+        "title": "8 categorias de estilo",
+        "description": "Minimalista, tech, luxo, divertido, vintage, natureza, ousado e artesanal."
+      },
+      {
+        "iconName": "Layers",
+        "title": "Variações múltiplas",
+        "description": "Cada geração oferece 4 conceitos únicos para comparar e refinar."
+      },
+      {
+        "iconName": "Download",
+        "title": "Downloads em alta resolução",
+        "description": "Exporte PNG até 4096×4096 para web, redes sociais e impressão."
+      },
+      {
+        "iconName": "Zap",
+        "title": "Resultados instantâneos",
+        "description": "Logos profissionais em menos de 30 segundos, sem habilidades de design."
+      },
+      {
+        "iconName": "CreditCard",
+        "title": "Pagamento flexível",
+        "description": "3 logos grátis; assinaturas a partir de R$25/mês ou pacotes de créditos."
+      }
+    ],
+    "faqItems": [
+      {
+        "question": "Quantos logos gratuitos posso gerar?",
+        "answer": "Novas contas recebem 3 gerações gratuitas (15 créditos). Cada geração cria 4 variações."
+      },
+      {
+        "question": "Posso usar os logos comercialmente?",
+        "answer": "Sim. Todos os logos gerados incluem direitos de uso comercial completos."
+      },
+      {
+        "question": "Quais formatos estão disponíveis?",
+        "answer": "PNG de alta qualidade até 4096×4096. A exportação SVG premium está disponível com créditos adicionais."
+      },
+      {
+        "question": "Como funcionam os créditos?",
+        "answer": "Cada geração padrão custa 5 créditos e produz 4 variações. Os planos mensais incluem 30–500 créditos."
+      },
+      {
+        "question": "Posso cancelar a qualquer momento?",
+        "answer": "Sim. As assinaturas são mensais e você pode cancelar quando quiser. Os pacotes de créditos não expiram."
+      },
+      {
+        "question": "Qual modelo de IA vocês usam?",
+        "answer": "Usamos o FLUX, otimizado para logotipos, tipografia limpa e estética de marca."
+      }
+    ],
+    "planCopy": {
+      "starter": {
+        "name": "Starter",
+        "description": "Ideal para freelancers e projetos paralelos"
+      },
+      "creator": {
+        "name": "Creator",
+        "description": "Melhor custo-benefício para agências e designers"
+      },
+      "agency": {
+        "name": "Agency",
+        "description": "Criatividade ilimitada para equipes"
+      }
+    }
+  }
+}
