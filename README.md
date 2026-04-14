@@ -1,3 +1,5 @@
+**Live:** [https://generateailogo.com](https://generateailogo.com)
+
 # SaaS Clone Template
 
 Production-ready SaaS boilerplate with authentication, payments, database, file storage, and a credits-based billing system. Built with the latest stack: **Next.js 16 + React 19 + Tailwind CSS 4 + shadcn/ui**.

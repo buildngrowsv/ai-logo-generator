@@ -101,8 +101,8 @@ export const siteConfig = {
       title: "Company",
       links: [
         { label: "About", href: "/about" },
-        { label: "Privacy Policy", href: "/privacy-policy" },
-        { label: "Terms of Service", href: "/terms-of-service" },
+        { label: "Privacy Policy", href: "/privacy" },
+        { label: "Terms of Service", href: "/terms" },
         { label: "Refund Policy", href: "/refund-policy" },
       ],
     },

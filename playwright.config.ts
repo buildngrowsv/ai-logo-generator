@@ -1,7 +1,7 @@
 /**
  * playwright.config.ts — Ai Logo Generator E2E test configuration
  *
- * Pro price: $4.90/month.
+ * Starter price: $4.90/month. Pro price: $14.90/month.
  * Note: These repos use T131 pricing (no T018 token lifecycle).
  * Phase 2 checkout test verifies Stripe redirect + success URL.
  * No Phase 3 token entitlement test (T018 not implemented).

@@ -6,6 +6,14 @@ export default defineConfig({
   test: {
     environment: 'node',
     globals: true,
-    exclude: ['**/node_modules/**', '**/dist/**', 'e2e/**', 'tests/e2e/**', 'tests/smoke/**', 'docs/demo/**/*.spec.ts'],
+    exclude: [
+      '**/node_modules/**',
+      '**/dist/**',
+      'e2e/**',
+      'tests/e2e/**',
+      'tests/smoke/**',
+      'testing/templates/e2e/**',
+      'docs/demo/**/*.spec.ts',
+    ],
   },
 })
