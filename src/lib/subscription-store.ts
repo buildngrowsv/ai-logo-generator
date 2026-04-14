@@ -174,7 +174,7 @@ export async function createPendingToken(): Promise<string> {
  *
  * Called with the value from `session.client_reference_id`.
  */
-export async function activateToken(token: string): Promise<void> {
+export async function activateToken(token: string): Promise<boolean> {
   const redis = getRedisClient();
   if (!redis) {
     console.warn(

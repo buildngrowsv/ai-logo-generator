@@ -166,7 +166,21 @@ async function handleCheckoutCompleted(event: Stripe.Event) {
   const subscriptionToken = completedCheckoutSession.client_reference_id;
   if (subscriptionToken && subscriptionToken.length >= 10) {
     // Activate token — Pro bypass is now live for this subscriber
-    await activateToken(subscriptionToken);
+    const activated = await activateToken(subscriptionToken);
+
+    if (!activated) {
+
+      console.error("[stripe-webhook] CRITICAL: activateToken failed — returning 500 so Stripe retries");
+
+      return NextResponse.json(
+
+        { received: true, processed: false, error: "Token activation failed — Redis unavailable" },
+
+        { status: 500 }
+
+      );
+
+    }
     console.log("[Stripe Webhook] checkout.session.completed — Pro token activated (T018)", {
       token: subscriptionToken,
       customer: completedCheckoutSession.customer,
