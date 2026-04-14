@@ -213,12 +213,40 @@ export async function addCredits(
   subscriptionTier: SubscriptionTier,
   reason?: string
 ): Promise<void> {
+  const creditReason = reason ?? `subscription_renewal:${subscriptionTier}`;
+
+  /**
+   * IDEMPOTENCY GUARD (2026-04-14, webhook fleet fix):
+   * Stripe retries failed webhook deliveries for up to 3 days. Without this
+   * check, each retry would add credits again — paying users get 2x, 3x, etc.
+   * We check credit_transactions for an existing row with the same userId +
+   * reason string. The reason includes the Stripe invoice/session ID so each
+   * payment event is uniquely keyed.
+   */
+  const [existingTransaction] = await db
+    .select({ id: creditTransactions.id })
+    .from(creditTransactions)
+    .where(
+      and(
+        eq(creditTransactions.userId, userId),
+        eq(creditTransactions.reason, creditReason)
+      )
+    )
+    .limit(1);
+
+  if (existingTransaction) {
+    console.log(
+      `[credits] addCredits: already processed "${creditReason}" for userId=${userId}, skipping duplicate`
+    );
+    return;
+  }
+
   await ensureUserProfile(userId);
 
   await db.insert(creditTransactions).values({
     userId,
     amount: creditAmount,
-    reason: reason ?? `subscription_renewal:${subscriptionTier}`,
+    reason: creditReason,
   });
 
   await db
