@@ -4,7 +4,7 @@ import { AuthSessionProvider } from "@/components/AuthSessionProvider";
 import { CookieConsentBanner } from "@/components/CookieConsentBanner";
 import CookieConsent from "@/components/CookieConsent";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
-import HomePage from "./[locale]/(main)/page";
+import HomePageContent from "@/components/HomePageContent";
 
 /**
  * Default-locale homepage shim.
@@ -26,7 +26,7 @@ export default async function RootHomePage() {
     <AuthSessionProvider>
       <NextIntlClientProvider locale="en" messages={messages}>
         <LanguageSwitcher locale="en" />
-        <HomePage />
+        <HomePageContent />
       </NextIntlClientProvider>
       <CookieConsentBanner />
       <CookieConsent />
