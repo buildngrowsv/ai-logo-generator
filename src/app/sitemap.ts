@@ -19,6 +19,7 @@
 
 import type { MetadataRoute } from "next";
 import { siteConfig } from "@/config/site";
+import { SEO_PAGES_CONFIG } from "@/config/seo-pages";
 
 const BASE_URL = siteConfig.siteUrl.replace(/\/$/, "");
 
@@ -27,20 +28,35 @@ const BASE_URL = siteConfig.siteUrl.replace(/\/$/, "");
  */
 export default function sitemap(): MetadataRoute.Sitemap {
   const lastModified = new Date();
-  const paths = [
+  /**
+   * Static paths — core app pages that always exist.
+   * Dynamic pSEO paths are generated from SEO_PAGES_CONFIG below.
+   */
+  const staticPaths = [
     "",
     "/pricing",
     "/login",
     "/gallery",
     "/about",
-    "/vs/looka",
-    "/vs/canva",
-    "/vs/brandmark",
     "/looka-alternative",
     "/free-ai-logo-generator",
     "/ai-logo-generator-small-business",
     "/privacy",
     "/terms",
+  ];
+
+  /** Programmatic SEO paths — /vs/, /for/, /best/ generated from config */
+  const vsPagePaths = SEO_PAGES_CONFIG.competitors.map((c) => `/vs/${c.slug}`);
+  const forPagePaths = SEO_PAGES_CONFIG.audiences.map((a) => `/for/${a.slug}`);
+  const bestPagePaths = SEO_PAGES_CONFIG.bestPages.map((b) => `/best/${b.slug}`);
+  const useCasePagePaths = SEO_PAGES_CONFIG.useCases.map((u) => `/use-cases/${u.slug}`);
+
+  const paths = [
+    ...staticPaths,
+    ...vsPagePaths,
+    ...forPagePaths,
+    ...bestPagePaths,
+    ...useCasePagePaths,
   ];
   const entries: MetadataRoute.Sitemap = [];
   for (const path of paths) {
