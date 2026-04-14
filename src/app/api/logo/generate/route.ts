@@ -35,7 +35,7 @@ import {
   type SubscriptionTier,
 } from "@/lib/credits";
 import { and, eq, gte, sql } from "drizzle-orm";
-import { isProActive } from "@/lib/subscription-store";
+import { isProActive, isProActiveFromDb } from "@/lib/subscription-store";
 
 /**
  * The fal.ai API endpoint for FLUX image generation.
@@ -312,7 +312,7 @@ export async function POST(request: NextRequest) {
   //
   // See: src/lib/subscription-store.ts for full design rationale.
   const proToken = request.headers.get("x-pro-token");
-  const isProSubscriber = await isProActive(proToken);
+  let isProSubscriber = await isProActive(proToken);
 
   /**
    * GATE 0: IP rate limiting (outermost layer — runs before any DB or auth touch)
@@ -370,6 +370,22 @@ export async function POST(request: NextRequest) {
       { error: "Please sign in to generate logos." },
       { status: 401 }
     );
+  }
+
+  // ---- DB fallback for Pro status (runs only when Redis check returned false) ----
+  //
+  // WHY (pane1776, 2026-04-14): When Upstash Redis is not provisioned, isProActive()
+  // always returns false because there is no Redis to query. But the webhook now writes
+  // subscription state to the DB FIRST (reordered same session). So paying Pro subscribers
+  // have an active record in the subscriptions table even without Redis.
+  //
+  // This check costs one DB read. It only fires when:
+  //   1. Redis Pro check already returned false (Redis down or token not found), AND
+  //   2. User is authenticated (we have a userId to query by)
+  //
+  // When Redis IS available, this code path never executes — zero overhead.
+  if (!isProSubscriber && session.user.id) {
+    isProSubscriber = await isProActiveFromDb(session.user.id);
   }
 
   /**

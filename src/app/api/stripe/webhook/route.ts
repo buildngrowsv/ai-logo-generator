@@ -154,46 +154,20 @@ async function handleCheckoutCompleted(event: Stripe.Event) {
   const completedCheckoutSession = event.data.object as Stripe.Checkout.Session;
   const checkoutMetadata = completedCheckoutSession.metadata ?? {};
 
-  // T018: Activate the Pro subscription token stored as client_reference_id.
-  // The checkout route (checkout-session/route.ts) sets client_reference_id to a
-  // UUID token (not the userId — changed in T018). Activating it in Redis lets the
-  // client use x-pro-token header in generate requests to bypass the IP rate limit.
+  // ---- DB writes FIRST, then Redis token activation ----
   //
-  // IMPORTANT: client_reference_id was previously the userId. As of T018 it is now
-  // the subscription token UUID. The userId is still in session metadata (metadata.userId).
-  // This dual storage means both the credit system and the token bypass can be served
-  // from the same webhook event.
+  // WHY THIS ORDER (changed 2026-04-14, pane1776 Coordinator 1):
+  // Previously, Redis activateToken() ran first and returned HTTP 500 on failure,
+  // which blocked ALL downstream DB writes (upsertUserProfile, syncSubscriptionRecord,
+  // allocateCreditsIfMissing). This meant: user pays → card charged → nothing persisted
+  // → guaranteed chargebacks. The DB is the durable source of truth for credits and
+  // subscription state; Redis is a performance optimization for the Pro bypass check.
+  // DB writes must always complete; Redis activation is best-effort on top.
+  //
+  // T018 context: client_reference_id holds the subscription token UUID (not userId).
+  // The userId is in session metadata (metadata.userId). Both the credit system (DB)
+  // and the token bypass (Redis) are served from this single webhook event.
   const subscriptionToken = completedCheckoutSession.client_reference_id;
-  if (subscriptionToken && subscriptionToken.length >= 10) {
-    // Activate token — Pro bypass is now live for this subscriber
-    const activated = await activateToken(subscriptionToken);
-
-    if (!activated) {
-
-      console.error("[stripe-webhook] CRITICAL: activateToken failed — returning 500 so Stripe retries");
-
-      return NextResponse.json(
-
-        { received: true, processed: false, error: "Token activation failed — Redis unavailable" },
-
-        { status: 500 }
-
-      );
-
-    }
-    console.log("[Stripe Webhook] checkout.session.completed — Pro token activated (T018)", {
-      token: subscriptionToken,
-      customer: completedCheckoutSession.customer,
-      email: completedCheckoutSession.customer_details?.email ?? completedCheckoutSession.customer_email,
-    });
-  } else {
-    // Sessions created before T018 deploy or sessions without the token.
-    // Log for visibility but do not block credit fulfillment below.
-    console.warn(
-      "[Stripe Webhook] checkout.session.completed — no subscription token in client_reference_id (pre-T018 session?). " +
-        "Pro bypass token not activated. Customer:", completedCheckoutSession.customer_email
-    );
-  }
 
   const userId = checkoutMetadata.userId;
   const userEmail =
@@ -281,6 +255,40 @@ async function handleCheckoutCompleted(event: Stripe.Event) {
       userId,
       tierCredits,
       `subscription_activation:${subscriptionTier}:${stripeSubscriptionId ?? completedCheckoutSession.id}`
+    );
+  }
+
+  // ---- Redis token activation (best-effort, AFTER all DB writes) ----
+  //
+  // The DB writes above are the durable record of payment. Redis token activation
+  // is an optimization that lets the generate route skip the DB round-trip for Pro
+  // checks. If Redis fails here, the user's payment is still recorded in the DB,
+  // and isProActive() will fall back to querying the subscriptions table.
+  //
+  // We return 200 regardless of Redis outcome so Stripe does not retry — the
+  // critical DB work is already done. Redis will catch up when provisioned.
+  if (subscriptionToken && subscriptionToken.length >= 10) {
+    const activated = await activateToken(subscriptionToken);
+    if (activated) {
+      console.log("[Stripe Webhook] checkout.session.completed — Pro token activated in Redis (T018)", {
+        token: subscriptionToken,
+        customer: completedCheckoutSession.customer,
+        email: completedCheckoutSession.customer_details?.email ?? completedCheckoutSession.customer_email,
+      });
+    } else {
+      // Redis unavailable — log but do NOT fail the webhook. DB writes already succeeded.
+      // The generate route's isProActive() will fall back to querying the subscriptions
+      // table, so the user still gets Pro access, just with an extra DB read per request.
+      console.warn(
+        "[Stripe Webhook] checkout.session.completed — Redis activateToken failed (Redis unavailable?). " +
+          "DB writes succeeded — user has credits and subscription record. Pro bypass will use DB fallback. " +
+          "Customer:", completedCheckoutSession.customer_email
+      );
+    }
+  } else {
+    console.warn(
+      "[Stripe Webhook] checkout.session.completed — no subscription token in client_reference_id (pre-T018 session?). " +
+        "Pro bypass token not activated. Customer:", completedCheckoutSession.customer_email
     );
   }
 }

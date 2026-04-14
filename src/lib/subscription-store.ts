@@ -46,6 +46,9 @@
  */
 
 import { Redis } from "@upstash/redis";
+import { db } from "@/db";
+import { subscriptions } from "@/db/schema/subscriptions";
+import { eq, and } from "drizzle-orm";
 
 // -------------------------------------------------------------------------
 // Redis client — lazy singleton, fails gracefully if env vars are missing
@@ -271,4 +274,50 @@ export async function isProActive(token: string | null | undefined): Promise<boo
   if (!token) return false;
   const status = await checkTokenStatus(token);
   return status === "active";
+}
+
+/**
+ * isProActiveFromDb — DB fallback for Pro status when Redis is unavailable.
+ *
+ * WHY THIS EXISTS (pane1776, 2026-04-14):
+ * The primary Pro check (isProActive) queries Redis for the subscription token.
+ * When Redis is not provisioned (UPSTASH_REDIS_REST_URL missing), isProActive
+ * always returns false — demoting paying Pro subscribers to free-tier rate limits.
+ *
+ * This function queries the Drizzle/Neon subscriptions table directly for an
+ * active subscription belonging to the given userId. It is slower than Redis
+ * (adds a DB round-trip) but ensures Pro subscribers retain access when Redis
+ * is down or not yet provisioned.
+ *
+ * WHEN TO USE:
+ * The generate route calls isProActive(token) first (fast Redis path, before auth).
+ * If that returns false AND the user is authenticated (userId available), this
+ * function runs as a second chance. This way:
+ *   - Redis available + token valid → fast Pro bypass (no DB hit)
+ *   - Redis unavailable + DB has active subscription → DB fallback Pro bypass
+ *   - Neither → free-tier rate limits apply (fail closed)
+ *
+ * CALLED BY: src/app/api/logo/generate/route.ts (after auth resolves userId)
+ */
+export async function isProActiveFromDb(userId: string | null | undefined): Promise<boolean> {
+  if (!userId) return false;
+
+  try {
+    const [activeSubscription] = await db
+      .select({ status: subscriptions.status })
+      .from(subscriptions)
+      .where(
+        and(
+          eq(subscriptions.userId, userId),
+          eq(subscriptions.status, "active")
+        )
+      )
+      .limit(1);
+
+    return !!activeSubscription;
+  } catch (err) {
+    // DB query failed — fail closed, never grant Pro on error
+    console.error("[subscription-store] isProActiveFromDb: DB query failed:", err);
+    return false;
+  }
 }
