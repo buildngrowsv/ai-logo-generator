@@ -271,7 +271,7 @@ async function handleCheckoutCompleted(event: Stripe.Event) {
     const activated = await activateToken(subscriptionToken);
     if (activated) {
       console.log("[Stripe Webhook] checkout.session.completed — Pro token activated in Redis (T018)", {
-        token: subscriptionToken,
+        token: subscriptionToken.slice(0, 8) + "…",
         customer: completedCheckoutSession.customer,
         email: completedCheckoutSession.customer_details?.email ?? completedCheckoutSession.customer_email,
       });
