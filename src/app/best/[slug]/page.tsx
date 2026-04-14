@@ -28,6 +28,7 @@ import { PRODUCT_CONFIG } from "@/lib/config";
 import { siteConfig } from "@/config/site";
 import { SeoInternalLinks } from "@/components/SeoInternalLinks";
 
+import { BreadcrumbJsonLd } from "@/components/BreadcrumbJsonLd";
 interface BestPageProps {
   params: Promise<{ slug: string }>;
 }
@@ -132,6 +133,20 @@ export default async function BestPage({ params }: BestPageProps) {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+      />
+
+      {/* BreadcrumbList JSON-LD — breadcrumb rich snippets in Google SERPs */}
+
+      <BreadcrumbJsonLd
+
+        items={[
+
+          { name: "Home", url: siteConfig.siteUrl },
+
+          { name: "Best", url: `${siteConfig.siteUrl}/best` },
+
+        ]}
+
       />
 
       <main className="min-h-screen bg-surface-primary text-text-primary">

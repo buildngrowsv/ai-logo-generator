@@ -210,7 +210,7 @@ export default function VsLookaPage() {
               <ul className="text-sm space-y-1">
                 <li>Free: <strong className="text-green-400">3 logos (no card)</strong></li>
                 <li>Starter: $4.90/month (unlimited)</li>
-                <li>Pro: $9.90/month</li>
+                <li>Pro: $14.90/month</li>
                 <li>Annual: ~$59/year</li>
               </ul>
             </div>

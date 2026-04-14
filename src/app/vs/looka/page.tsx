@@ -26,6 +26,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { BreadcrumbJsonLd } from "@/components/BreadcrumbJsonLd";
 // ---------------------------------------------------------------------------
 // Metadata
 // ---------------------------------------------------------------------------
@@ -131,6 +132,20 @@ export default function VsLookaPage() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+      />
+
+      {/* BreadcrumbList JSON-LD — breadcrumb rich snippets in Google SERPs */}
+
+      <BreadcrumbJsonLd
+
+        items={[
+
+          { name: "Home", url: "" },
+
+          { name: "Alternatives", url: `${""}/vs` },
+
+        ]}
+
       />
 
       <main className="min-h-screen bg-gray-950 text-gray-100">

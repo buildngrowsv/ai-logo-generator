@@ -205,7 +205,7 @@ export default function VsCanvaPage() {
               <ul className="text-sm space-y-1">
                 <li>Free: <strong className="text-green-400">3 logos (no card)</strong></li>
                 <li>Starter: $4.90/month (unlimited logos)</li>
-                <li>Pro: $9.90/month</li>
+                <li>Pro: $14.90/month</li>
                 <li>Purpose: <em>Logos only</em></li>
               </ul>
             </div>

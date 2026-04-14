@@ -31,6 +31,7 @@ import { PRODUCT_CONFIG } from "@/lib/config";
 import { siteConfig } from "@/config/site";
 import { SeoInternalLinks } from "@/components/SeoInternalLinks";
 
+import { BreadcrumbJsonLd } from "@/components/BreadcrumbJsonLd";
 interface AudiencePageProps {
   params: Promise<{ audience: string }>;
 }
@@ -147,7 +148,14 @@ export default async function AudienceLandingPage({
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
       />
 
-      <main className="min-h-screen bg-surface-primary text-text-primary">
+            {/* BreadcrumbList JSON-LD — earns breadcrumb rich snippets in Google SERPs */}
+      <BreadcrumbJsonLd
+        items={[
+          { name: "Home", url: siteConfig.siteUrl },
+          { name: "Use Cases", url: `${siteConfig.siteUrl}/for` },
+        ]}
+      />
+<main className="min-h-screen bg-surface-primary text-text-primary">
         {/* Navigation bar — consistent with landing page */}
         <nav className="fixed top-0 left-0 right-0 z-50 bg-surface-primary/80 backdrop-blur-xl border-b border-white/5">
           <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">

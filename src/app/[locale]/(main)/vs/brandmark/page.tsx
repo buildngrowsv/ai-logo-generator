@@ -178,7 +178,7 @@ export default function VsBrandmarkPage() {
               </thead>
               <tbody>
                 <CompRow feature="AI model" us="FLUX (text-to-logo)" them="Wizard-based + AI assist" />
-                <CompRow feature="Pricing model" us="Subscription ($4.90-$9.90/mo)" them="Per-logo ($25/$65/$175)" />
+                <CompRow feature="Pricing model" us="Subscription ($4.90-$14.90/mo)" them="Per-logo ($25/$65/$175)" />
                 <CompRow feature="Free downloads" us="Yes (3 logos, no card)" them="No (design free, pay to download)" />
                 <CompRow feature="Generation speed" us="~10 seconds" them="2-3 minutes (wizard)" />
                 <CompRow feature="Download formats" us="PNG (high-res)" them="PNG, SVG, PDF, EPS" />
@@ -201,7 +201,7 @@ export default function VsBrandmarkPage() {
               <ul className="text-sm space-y-1">
                 <li>Free: <strong className="text-green-400">3 logos (no card)</strong></li>
                 <li>Starter: $4.90/month (unlimited)</li>
-                <li>Pro: $9.90/month</li>
+                <li>Pro: $14.90/month</li>
                 <li>Annual: ~$59/year</li>
               </ul>
             </div>

@@ -18,6 +18,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { BreadcrumbJsonLd } from "@/components/BreadcrumbJsonLd";
 // ---------------------------------------------------------------------------
 // Metadata — targets "AI logo generator comparison" cluster
 // ---------------------------------------------------------------------------
@@ -63,6 +64,28 @@ const COMPARISONS = [
       "Free credits to try before paying",
     ],
   },
+  {
+    slug: "brandmark",
+    name: "Brandmark",
+    tagline:
+      "5 months of unlimited logos for the price of one Brandmark download",
+    highlights: [
+      "$4.90/mo unlimited vs $25-$175 per logo",
+      "Generative AI vs assembled templates",
+      "Free downloadable files to try",
+    ],
+  },
+  {
+    slug: "hatchful",
+    name: "Hatchful (Shopify)",
+    tagline:
+      "AI-generated unique logos vs Shopify's deprecated template-based logo maker",
+    highlights: [
+      "Generative AI vs fixed icon library",
+      "Actively maintained (Hatchful is sunset)",
+      "Free credits + $4.90/mo Pro",
+    ],
+  },
 ];
 
 // ---------------------------------------------------------------------------
@@ -73,6 +96,13 @@ export default function VsIndexPage() {
     <main className="min-h-screen bg-gray-950 text-gray-100">
       {/* -- Navigation -- */}
       <nav className="border-b border-gray-800 bg-gray-950/80 backdrop-blur-md">
+        {/* BreadcrumbList JSON-LD — breadcrumb rich snippets in Google SERPs */}
+        <BreadcrumbJsonLd
+          items={[
+            { name: "Home", url: "" },
+            { name: "Alternatives", url: `${""}/vs` },
+          ]}
+        />
         <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
           <Link href="/" className="flex items-center gap-2">
             <span className="text-2xl">{"\u2728"}</span>
