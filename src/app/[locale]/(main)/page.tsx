@@ -108,8 +108,31 @@ export default function HomePage() {
   const planCopyById = messages.Home?.planCopy;
   const colors = siteConfig.themeColors;
 
+  /**
+   * JSON-LD FAQPage structured data for AEO (Answer Engine Optimization).
+   * Built from the same FAQ_ITEMS array rendered visually below, ensuring
+   * the schema and visible content always match.
+   */
+  const faqPageJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqItemsList.map((item) => ({
+      "@type": "Question",
+      name: item.question,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: item.answer,
+      },
+    })),
+  };
+
   return (
     <div className="min-h-screen bg-background">
+      {/* JSON-LD FAQPage — enables rich results and AI Overview citation */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqPageJsonLd) }}
+      />
       {/* ============================================================
        * HERO SECTION
        * Above-the-fold conversion zone. Gradient headline + dual CTAs.
