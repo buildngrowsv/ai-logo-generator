@@ -86,6 +86,16 @@ const PUBLIC_PATHS = [
   "/sitemap.xml",
   "/robots.txt",
   "/opengraph-image",
+
+  // Added by merge-pseo-middleware-paths.mjs (Gate 9 compliance)
+  "/for",
+  "/use-cases",
+  "/best",
+  "/lp",
+  "/testimonials",
+  "/ai-",
+  "/api/health",
+  "/get-started",
 ];
 
 function isPublicPath(strippedPathname: string): boolean {
@@ -151,5 +161,5 @@ export default function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|api|privacy-policy|privacy|terms-of-service|terms|refund-policy|refund).*)"],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|api|privacy-policy|privacy|terms-of-service|terms|refund-policy|refund)|pricing|vs|for|use-cases|best|blog|lp|testimonials|ai-|get-started.*)"],
 };
