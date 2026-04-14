@@ -182,15 +182,17 @@ export async function activateToken(token: string): Promise<boolean> {
         "Set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN on Vercel.",
       { token }
     );
-    return;
+    return false;
   }
 
   try {
     await redis.setex(subTokenKey(token), ACTIVE_TTL_SECONDS, "active");
     console.log("[subscription-store] activateToken: Pro token activated in Redis", { token });
+    return true;
   } catch (err) {
     console.error("[subscription-store] activateToken: Redis write failed:", err);
     // Log but do not throw — webhook must return 200 to Stripe to avoid retries
+    return false;
   }
 }
 
