@@ -15,7 +15,7 @@ import { AuthSessionProvider } from "@/components/AuthSessionProvider";
 import { routing } from "@/i18n/routing";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { siteConfig } from "@/config/site";
-import "../globals.css";
+/* globals.css is now imported in the root layout (src/app/layout.tsx) */
 
 const productionSiteUrl = siteConfig.siteUrl;
 
@@ -149,30 +149,26 @@ export default async function LocaleLayout({ children, params }: Props) {
   const messages = await getMessages();
 
   return (
-    <html lang={locale} className="dark" suppressHydrationWarning>
-      <head>
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdSoftware) }}
-        />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdFaq) }}
-        />
-      </head>
-      <body className="min-h-screen antialiased">
-        {/* GA4 with consent mode — GoogleAnalyticsLoader reads env var internally */}
-        <GoogleAnalyticsLoader />
-        <AuthSessionProvider>
-          <NextIntlClientProvider messages={messages}>
-            {/* Language switcher — EN | ES toggle, visible on all pages */}
-            <LanguageSwitcher locale={locale} />
-            {children}
-          </NextIntlClientProvider>
-        </AuthSessionProvider>
-        <CookieConsentBanner />
-        <CookieConsent />
-      </body>
-    </html>
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdSoftware) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdFaq) }}
+      />
+      {/* GA4 with consent mode — GoogleAnalyticsLoader reads env var internally */}
+      <GoogleAnalyticsLoader />
+      <AuthSessionProvider>
+        <NextIntlClientProvider messages={messages}>
+          {/* Language switcher — EN | ES toggle, visible on all pages */}
+          <LanguageSwitcher locale={locale} />
+          {children}
+        </NextIntlClientProvider>
+      </AuthSessionProvider>
+      <CookieConsentBanner />
+      <CookieConsent />
+    </>
   );
 }
