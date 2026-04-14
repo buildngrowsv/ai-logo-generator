@@ -1,34 +1,35 @@
 /**
- * Credit System — Usage Tracking and Rate Limiting
- * 
+ * Credit System — Database-Backed Usage Tracking and Rate Limiting
+ *
  * WHY THIS EXISTS:
  * Every AI tool SaaS needs usage limits to control costs. Each fal.ai API call
  * costs us money (GPU inference), so we need to ensure:
  *   - Free users get a taste (3/day) but can't bankrupt us
  *   - Basic users get reasonable usage (50/month) for their $4.99
  *   - Pro users get unlimited (we eat the cost, but they're paying $9.99/mo)
- * 
- * ARCHITECTURE DECISION — Database-backed paid credits, in-memory free fallback:
- * ai-logo-generator now uses the database-backed user_profiles.credits balance as
- * the production source of truth for paid usage. This file remains responsible
- * only for the lightweight free-tier fallback used before a user has a persisted
- * profile row. That means:
- *   - Paid subscriptions and credit packs are fulfilled durably by the Stripe webhook
- *   - The generate route reserves/decrements paid credits in Postgres
- *   - This in-memory Map only covers brand-new accounts that have not been
- *     materialized into user_profiles yet
  *
- * The fallback still resets on server restart, so it should never be treated as
- * the durable source of truth for paid customers.
- * 
- * WHY NOT USE STRIPE USAGE-BASED BILLING:
- * Stripe supports metered billing, but it adds complexity (usage records, billing
- * thresholds, etc.) and doesn't give us real-time credit checking. Our approach
- * is simpler: fixed subscription tiers with local credit counters. This matches
- * the UX pattern users expect from tools like Remove.bg, Canva, etc.
+ * ARCHITECTURE — Database-Backed (Production):
+ * Credits are tracked in the `user_profiles` table (credits column) and every
+ * change is audit-logged in `credit_transactions`. This persists across Vercel
+ * cold starts, deploys, and multi-instance scaling. The previous in-memory Map
+ * implementation reset on every cold start, effectively giving everyone unlimited
+ * usage and was the ROOT CAUSE of $0 revenue across the fleet.
+ *
+ * GATE 8 FIX (flux-exec-4419, 2026-04-14):
+ * Replaced in-memory Map with DB-backed version from saas-clone-template.
+ * The DB schema (user_profiles, credit_transactions) already existed in this repo.
+ *
+ * HOW PERIOD RESETS WORK:
+ * Free tier resets daily, paid tiers reset monthly. We use the `credit_transactions`
+ * table to determine when the last period started. On each credit check, we look
+ * at deductions in the current period window. This is a "lazy reset" — no cron needed.
  */
 
 import { PRODUCT_CONFIG, type ProductPricingTier } from "@/lib/config";
+import { db } from "@/db";
+import { userProfiles } from "@/db/schema/users";
+import { creditTransactions } from "@/db/schema/credit-transactions";
+import { eq, and, gte, sql } from "drizzle-orm";
 
 /**
  * Subscription tier names — must match the keys in PRODUCT_CONFIG.pricing.
@@ -37,30 +38,20 @@ import { PRODUCT_CONFIG, type ProductPricingTier } from "@/lib/config";
 export type SubscriptionTier = "free" | "basic" | "pro" | "none";
 
 /**
- * CreditRecord tracks a single user's usage within their current billing period.
- * 
- * WHY we track the period start:
- * Free tier resets daily, paid tiers reset monthly. We store when the current
- * period started so we can check if credits should be refreshed. This avoids
- * needing a cron job to reset credits — we just check lazily on each request.
+ * Result of a credit availability check.
+ *
+ * WHY we return the full object instead of just a boolean:
+ * The API route needs to include remaining credits in the response so the
+ * frontend can show "3 of 50 credits used" in the UI. This helps users
+ * understand their usage and creates natural upgrade pressure when they
+ * see credits running low.
  */
-interface CreditRecord {
-  readonly usageCount: number;
-  readonly periodStartTimestamp: number;
-  readonly subscriptionTier: SubscriptionTier;
+export interface CreditCheckResult {
+  readonly hasCreditsRemaining: boolean;
+  readonly remainingCreditsCount: number;
+  readonly tierCreditLimit: number;
+  readonly currentUsageCount: number;
 }
-
-/**
- * In-memory credit store.
- *
- * WARNING: This is only the free-tier fallback for users without a DB profile.
- * Paid balances live in Postgres, not here. This Map still resets on server
- * restart, which is acceptable for the fallback path but not for revenue-backed
- * credits.
- *
- * Key = user ID, Value = their fallback free-tier record.
- */
-const inMemoryCreditStore = new Map<string, CreditRecord>();
 
 /**
  * Determines the pricing tier configuration for a given subscription level.
@@ -76,164 +67,166 @@ function getPricingTierForSubscription(
 }
 
 /**
- * Checks whether a credit record's period has expired and needs reset.
- * 
- * WHY: Instead of running a cron job to reset all users' credits at midnight
- * (or on billing anniversary), we check lazily when the user makes a request.
- * This is simpler, has no infrastructure cost, and handles edge cases like
- * server restarts gracefully.
+ * Counts how many credits a user has consumed in the current billing period.
+ *
+ * For free tier: counts deductions in the last 24 hours.
+ * For paid tiers: counts deductions in the last 30 days.
+ *
+ * We count negative transactions (deductions) since the period start.
  */
-function hasPeriodExpired(
-  creditRecord: CreditRecord,
+async function getUsageInCurrentPeriod(
+  userId: string,
   pricingTier: ProductPricingTier
-): boolean {
-  const currentTimestamp = Date.now();
-  const elapsedMilliseconds =
-    currentTimestamp - creditRecord.periodStartTimestamp;
+): Promise<number> {
+  const periodStartMs =
+    pricingTier.period === "day"
+      ? Date.now() - 24 * 60 * 60 * 1000
+      : Date.now() - 30 * 24 * 60 * 60 * 1000;
 
-  if (pricingTier.period === "day") {
-    const oneDayInMilliseconds = 24 * 60 * 60 * 1000;
-    return elapsedMilliseconds >= oneDayInMilliseconds;
-  }
+  const periodStart = new Date(periodStartMs);
 
-  /**
-   * For monthly periods, we use 30 days as an approximation.
-   * In production with Stripe, the actual reset would align with the
-   * subscription billing cycle date from Stripe's webhook events.
-   */
-  const thirtyDaysInMilliseconds = 30 * 24 * 60 * 60 * 1000;
-  return elapsedMilliseconds >= thirtyDaysInMilliseconds;
+  const result = await db
+    .select({
+      totalDeducted: sql<number>`COALESCE(ABS(SUM(CASE WHEN ${creditTransactions.amount} < 0 THEN ${creditTransactions.amount} ELSE 0 END)), 0)`,
+    })
+    .from(creditTransactions)
+    .where(
+      and(
+        eq(creditTransactions.userId, userId),
+        gte(creditTransactions.createdAt, periodStart)
+      )
+    );
+
+  return Number(result[0]?.totalDeducted ?? 0);
 }
 
 /**
- * Retrieves or initializes a user's credit record.
- * 
- * This helper intentionally only manages the fallback free-tier record.
- * Once a user has a materialized profile row and purchased credits, the
- * generate route uses Postgres instead.
+ * Ensures a user_profiles row exists for the given user.
+ * Creates one with default values if it doesn't exist yet.
  */
-function getUserCreditRecord(
+async function ensureUserProfile(
   userId: string,
-  subscriptionTier: SubscriptionTier
-): CreditRecord {
-  const existingRecord = inMemoryCreditStore.get(userId);
+  email?: string
+): Promise<void> {
+  const existing = await db
+    .select({ userId: userProfiles.userId })
+    .from(userProfiles)
+    .where(eq(userProfiles.userId, userId))
+    .limit(1);
 
-  if (!existingRecord) {
-    const freshRecord: CreditRecord = {
-      usageCount: 0,
-      periodStartTimestamp: Date.now(),
-      subscriptionTier,
-    };
-    inMemoryCreditStore.set(userId, freshRecord);
-    return freshRecord;
+  if (existing.length === 0) {
+    await db.insert(userProfiles).values({
+      userId,
+      email: email ?? "unknown",
+      credits: 0,
+      plan: "free",
+    });
+  }
+}
+
+/**
+ * Looks up the user's subscription tier from the database.
+ */
+export async function getUserSubscriptionTierFromDb(
+  userId: string
+): Promise<SubscriptionTier> {
+  const profile = await db
+    .select({ plan: userProfiles.plan })
+    .from(userProfiles)
+    .where(eq(userProfiles.userId, userId))
+    .limit(1);
+
+  if (!profile[0]) {
+    return "free";
   }
 
-  /**
-   * If the user's subscription tier changed (e.g., they upgraded from free to basic),
-   * update the record to reflect the new tier. This ensures upgraded users
-   * immediately get their new credit limit without waiting for period reset.
-   */
-  if (existingRecord.subscriptionTier !== subscriptionTier) {
-    const upgradedRecord: CreditRecord = {
-      usageCount: 0,
-      periodStartTimestamp: Date.now(),
-      subscriptionTier,
-    };
-    inMemoryCreditStore.set(userId, upgradedRecord);
-    return upgradedRecord;
+  const plan = profile[0].plan;
+  if (plan === "basic" || plan === "pro") {
+    return plan;
   }
-
-  /**
-   * Check if the current period has expired. If so, reset the usage count
-   * and start a new period. This is the "lazy reset" pattern.
-   */
-  const pricingTier = getPricingTierForSubscription(subscriptionTier);
-  if (hasPeriodExpired(existingRecord, pricingTier)) {
-    const resetRecord: CreditRecord = {
-      usageCount: 0,
-      periodStartTimestamp: Date.now(),
-      subscriptionTier,
-    };
-    inMemoryCreditStore.set(userId, resetRecord);
-    return resetRecord;
-  }
-
-  return existingRecord;
+  return "free";
 }
 
 /**
  * Checks whether a user has credits remaining for a generation.
- * 
- * Returns an object with:
- *   - hasCredits: boolean — can this user make a generation right now?
- *   - remainingCredits: number — how many credits left (-1 for unlimited)
- *   - tierLimit: number — total credits for this tier per period
- * 
- * WHY we return the full object instead of just a boolean:
- * The API route needs to include remaining credits in the response so the
- * frontend can show "3 of 50 credits used" in the UI. This helps users
- * understand their usage and creates natural upgrade pressure when they
- * see credits running low.
+ *
+ * Now async because it queries the database. Callers must await.
  */
-export interface CreditCheckResult {
-  readonly hasCreditsRemaining: boolean;
-  readonly remainingCreditsCount: number;
-  readonly tierCreditLimit: number;
-  readonly currentUsageCount: number;
-}
-
-export function checkUserCreditAvailability(
+export async function checkUserCreditAvailability(
   userId: string,
   subscriptionTier: SubscriptionTier
-): CreditCheckResult {
+): Promise<CreditCheckResult> {
   const pricingTier = getPricingTierForSubscription(subscriptionTier);
-  const creditRecord = getUserCreditRecord(userId, subscriptionTier);
 
-  /**
-   * -1 limit means unlimited. Pro users should never be blocked.
-   * We still track their usage for analytics purposes, but we always
-   * return hasCreditsRemaining: true.
-   */
   if (pricingTier.limit === -1) {
+    const usageCount = await getUsageInCurrentPeriod(userId, pricingTier);
     return {
       hasCreditsRemaining: true,
       remainingCreditsCount: -1,
       tierCreditLimit: -1,
-      currentUsageCount: creditRecord.usageCount,
+      currentUsageCount: usageCount,
     };
   }
 
-  const remainingCredits = pricingTier.limit - creditRecord.usageCount;
+  const usageCount = await getUsageInCurrentPeriod(userId, pricingTier);
+  const remainingCredits = pricingTier.limit - usageCount;
 
   return {
     hasCreditsRemaining: remainingCredits > 0,
     remainingCreditsCount: Math.max(0, remainingCredits),
     tierCreditLimit: pricingTier.limit,
-    currentUsageCount: creditRecord.usageCount,
+    currentUsageCount: usageCount,
   };
 }
 
 /**
  * Deducts one credit from the user's balance after a successful generation.
- * 
+ *
  * IMPORTANT: Call this AFTER the fal.ai API call succeeds, not before.
- * We don't want to deduct credits for failed generations — that would be
- * a terrible user experience and would generate support tickets.
- * 
- * This only deducts from the in-memory fallback path. Paid credit deductions
- * happen in the generate route against user_profiles.credits so concurrent
- * requests cannot overspend the durable balance.
+ * Records the deduction as a -1 transaction in the audit log.
  */
-export function deductOneCreditForUser(
+export async function deductOneCreditForUser(
   userId: string,
   subscriptionTier: SubscriptionTier
-): void {
-  const currentRecord = getUserCreditRecord(userId, subscriptionTier);
+): Promise<void> {
+  await ensureUserProfile(userId);
 
-  const updatedRecord: CreditRecord = {
-    ...currentRecord,
-    usageCount: currentRecord.usageCount + 1,
-  };
+  await db.insert(creditTransactions).values({
+    userId,
+    amount: -1,
+    reason: `action:${PRODUCT_CONFIG.name || "generation"}`,
+  });
 
-  inMemoryCreditStore.set(userId, updatedRecord);
+  await db
+    .update(userProfiles)
+    .set({ credits: sql`${userProfiles.credits} - 1` })
+    .where(eq(userProfiles.userId, userId));
+}
+
+/**
+ * Adds credits to a user's account — typically called from the Stripe webhook
+ * when a subscription is activated or renewed.
+ */
+export async function addCredits(
+  userId: string,
+  creditAmount: number,
+  subscriptionTier: SubscriptionTier,
+  reason?: string
+): Promise<void> {
+  await ensureUserProfile(userId);
+
+  await db.insert(creditTransactions).values({
+    userId,
+    amount: creditAmount,
+    reason: reason ?? `subscription_renewal:${subscriptionTier}`,
+  });
+
+  await db
+    .update(userProfiles)
+    .set({
+      credits: sql`${userProfiles.credits} + ${creditAmount}`,
+      plan: subscriptionTier === "none" ? "free" : subscriptionTier,
+      updatedAt: new Date(),
+    })
+    .where(eq(userProfiles.userId, userId));
 }

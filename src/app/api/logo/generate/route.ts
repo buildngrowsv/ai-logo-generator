@@ -168,7 +168,7 @@ async function reserveDatabaseCreditsForGeneration(
     .limit(1);
 
   if (!existingUserProfile) {
-    const freeTierAvailability = checkUserCreditAvailability(userId, "free");
+    const freeTierAvailability = await checkUserCreditAvailability(userId, "free");
 
     if (!freeTierAvailability.hasCreditsRemaining) {
       return NextResponse.json(
@@ -525,11 +525,11 @@ export async function POST(request: NextRequest) {
 
     if (billingGuardResult.mode === "free-fallback") {
       /**
-       * Free-tier fallback still uses the in-memory limiter because brand-new
-       * accounts may not have a DB profile row yet. Paid users no longer touch
-       * this path; their balance was already reserved above.
+       * Deduct one credit from the user's DB-backed balance after successful
+       * generation. Paid users had their balance reserved above; this handles
+       * the free-tier deduction path.
        */
-      deductOneCreditForUser(
+      await deductOneCreditForUser(
         session.user.id,
         normalizeStoredPlanToCreditTier(billingGuardResult.subscriptionTier)
       );
