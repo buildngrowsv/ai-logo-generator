@@ -5,6 +5,7 @@ import { CookieConsentBanner } from "@/components/CookieConsentBanner";
 import CookieConsent from "@/components/CookieConsent";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import HomePageContent from "@/components/HomePageContent";
+import { SeoInternalLinks } from "@/components/SeoInternalLinks";
 
 /**
  * Default-locale homepage shim.
@@ -28,6 +29,12 @@ export default async function RootHomePage() {
         <LanguageSwitcher locale="en" />
         <HomePageContent />
       </NextIntlClientProvider>
+      {/* Internal SEO links — distributes homepage PageRank to pSEO pages */}
+      <section className="py-12 px-6 border-t border-white/5">
+        <div className="max-w-5xl mx-auto">
+          <SeoInternalLinks />
+        </div>
+      </section>
       <CookieConsentBanner />
       <CookieConsent />
     </AuthSessionProvider>
