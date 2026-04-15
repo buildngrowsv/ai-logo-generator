@@ -92,19 +92,48 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: "Invalid email address" }, { status: 400 });
   }
 
-  // Store the lead — try DB first, fall back to console log
+  /**
+   * Store lead via Resend Contacts API (primary) and DB (secondary).
+   * Resend builds the remarketing audience; DB is a local backup.
+   * Neither failure blocks the bonus generation — user trust comes first.
+   */
+  const resendApiKey = process.env.RESEND_API_KEY?.trim();
+  const audienceId = process.env.RESEND_AUDIENCE_ID?.trim();
+
+  if (resendApiKey && audienceId) {
+    try {
+      const response = await fetch("https://api.resend.com/contacts", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${resendApiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          audience_id: audienceId,
+          email,
+          unsubscribed: false,
+          first_name: "",
+          last_name: "",
+        }),
+      });
+
+      if (!response.ok) {
+        const errorBody = await response.text();
+        console.error(`[email-capture] Resend error (${response.status}): ${errorBody}`);
+      } else {
+        console.info(`[email-capture] Added to Resend: ${email.slice(0, 3)}***@${email.split("@")[1]} source=${source}`);
+      }
+    } catch (err) {
+      console.error("[email-capture] Resend request failed:", err);
+    }
+  }
+
+  // DB backup — store locally when DATABASE_URL is set
   try {
-    // Attempt DB storage if available.
-    // WHY TRY/CATCH: the email_leads table may not exist in early deployments.
-    // A missing table should not prevent the user from getting their bonus gen.
     if (process.env.DATABASE_URL) {
-      // Dynamically import to avoid build-time failure if drizzle schema is missing
-      // We use a raw SQL fallback rather than the ORM to avoid schema dependency.
       const { db } = await import("@/db");
       const { sql } = await import("drizzle-orm");
 
-      // Create table if it doesn't exist (idempotent — safe to run on every request)
-      // This avoids requiring a separate migration for this simple leads table.
       await db.execute(sql`
         CREATE TABLE IF NOT EXISTS email_leads (
           id SERIAL PRIMARY KEY,
@@ -115,23 +144,18 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         )
       `);
 
-      // Insert lead — ON CONFLICT DO NOTHING so duplicate emails don't throw
       await db.execute(sql`
         INSERT INTO email_leads (email, source, ip_hash)
         VALUES (${email}, ${source}, ${clientIp.slice(0, 8) + "***"})
         ON CONFLICT DO NOTHING
       `);
 
-      console.info(`[email-capture] Stored lead: ${email.slice(0, 3)}***@${email.split("@")[1]} source=${source}`);
-    } else {
-      // No DB configured — log to Vercel function logs for operator visibility
-      // Operator can check Vercel logs to see captured leads
-      console.info(`[email-capture] Lead (no DB): ${email.slice(0, 3)}***@${email.split("@")[1]} source=${source} ip=${clientIp.slice(0, 8)}***`);
+      console.info(`[email-capture] Stored lead in DB: ${email.slice(0, 3)}***@${email.split("@")[1]} source=${source}`);
+    } else if (!resendApiKey) {
+      console.info(`[email-capture] Lead (no Resend, no DB): ${email.slice(0, 3)}***@${email.split("@")[1]} source=${source} ip=${clientIp.slice(0, 8)}***`);
     }
   } catch (storageError) {
-    // Storage failure — log but don't fail the request
-    // The user gave us their email; we owe them the bonus generation regardless
-    console.error("[email-capture] Storage error (non-fatal):", storageError);
+    console.error("[email-capture] DB storage error (non-fatal):", storageError);
   }
 
   return NextResponse.json(

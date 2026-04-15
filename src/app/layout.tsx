@@ -123,6 +123,7 @@ export const metadata: Metadata = {
     url: "https://generateailogo.com",
     siteName: "LogoForge AI",
   },
+  twitter: { card: "summary_large_image" },
   robots: { index: true, follow: true },
 };
 
