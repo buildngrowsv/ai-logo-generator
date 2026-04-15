@@ -204,6 +204,50 @@ const jsonLdHowTo = {
   ],
 };
 
+/**
+ * FAQPage JSON-LD — displays FAQ accordion in Google SERPs, increasing
+ * click-through rate by answering common queries before users visit.
+ * Targets high-volume "AI logo generator" related questions.
+ */
+const jsonLdFAQ = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: [
+    {
+      "@type": "Question",
+      name: "How does the AI logo generator work?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "Enter your business name and describe your brand identity, industry, and preferred colors. Our AI (powered by advanced image generation models) creates multiple professional logo variations in seconds. No design skills needed — just type and generate.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "Is the AI logo generator free to use?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "Yes — you get 3 free logo generations per day with no signup required. For unlimited logos and access to all styles, paid plans start at $4.90/month.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "Can I use AI-generated logos for my business?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "Absolutely. All logos generated on LogoForge AI come with full commercial use rights. You can use them for your website, business cards, social media, packaging, and any other commercial purpose.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "What logo styles are available?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "LogoForge AI offers multiple style categories including minimalist, modern, vintage, playful, tech, luxury, and more. Each generation produces several variations so you can pick the one that best represents your brand.",
+      },
+    },
+  ],
+};
+
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" className={`dark ${interFont.variable}`} suppressHydrationWarning>
@@ -227,6 +271,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdHowTo) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdFAQ) }}
         />
       </head>
       <body className="min-h-screen antialiased">
