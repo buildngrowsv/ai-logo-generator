@@ -113,6 +113,63 @@ export const metadata: Metadata = {
   robots: { index: true, follow: true },
 };
 
+/**
+ * BreadcrumbList JSON-LD — breadcrumb navigation in Google search results.
+ */
+const jsonLdBreadcrumb = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  itemListElement: [
+    { "@type": "ListItem", position: 1, name: "Home", item: "https://generateailogo.com" },
+    { "@type": "ListItem", position: 2, name: "Pricing", item: "https://generateailogo.com/pricing" },
+  ],
+};
+
+/**
+ * FAQPage JSON-LD — enables Google rich snippets (expandable Q&A in SERP).
+ * Placed in root layout for guaranteed SSR rendering. The page.tsx also has
+ * this schema, but Next.js RSC streaming does not reliably flush page-level
+ * script tags into initial HTML.
+ */
+const jsonLdFaqPage = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: [
+    {
+      "@type": "Question",
+      name: "How does AI logo generation work?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "LogoForge AI uses advanced FLUX AI models to generate unique logo designs from your text description. Enter your business name, describe the style you want, and the AI produces multiple professional logo options in seconds.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "Can I use the generated logos commercially?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "Yes! You own full commercial rights to every logo you generate. Use them for your business branding, websites, social media, business cards, merchandise, or any commercial purpose.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "How much does it cost?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "Starter plan at $4.90/month with 50 logo credits, Creator plan at $14.90/month with 200 credits, and Agency plan at $39.90/month with 500 credits. Try 3 free logos before subscribing.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "What file formats do I get?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "All generated logos are delivered as high-resolution PNG files at 1024x1024 pixels, suitable for websites, social media, and most digital applications.",
+      },
+    },
+  ],
+};
+
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
@@ -120,6 +177,14 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdSoftwareApp) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdFaqPage) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdBreadcrumb) }}
         />
       </head>
       <body className="min-h-screen antialiased">
