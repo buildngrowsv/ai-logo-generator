@@ -86,11 +86,25 @@ export default function GetStartedPage() {
     ],
   };
 
+  const faqJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: FAQS.map((faq) => ({
+      "@type": "Question",
+      name: faq.question,
+      acceptedAnswer: { "@type": "Answer", text: faq.answer },
+    })),
+  };
+
   return (
     <main className="min-h-screen bg-gray-950 text-gray-100">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
       />
 
       <nav className="border-b border-gray-800 bg-gray-950/80 backdrop-blur-md sticky top-0 z-50">
@@ -141,6 +155,35 @@ export default function GetStartedPage() {
               <h3 className="text-lg font-semibold text-white mb-2">{f.title}</h3>
               <p className="text-gray-400 text-sm leading-relaxed">{f.description}</p>
             </div>
+          ))}
+        </div>
+      </section>
+
+      {/* FAQ Section */}
+      <section className="mx-auto max-w-4xl px-6 pb-16">
+        <h2 className="text-2xl font-bold text-white text-center mb-8">Frequently Asked Questions</h2>
+        <div className="space-y-4">
+          {FAQS.map((faq) => (
+            <details key={faq.question} className="group rounded-xl border border-gray-800 bg-gray-900/30">
+              <summary className="flex cursor-pointer items-center justify-between p-5 text-white font-medium">
+                {faq.question}
+                <span className="ml-4 text-gray-500 group-open:rotate-45 transition-transform text-xl">+</span>
+              </summary>
+              <p className="px-5 pb-5 text-gray-400 text-sm leading-relaxed">{faq.answer}</p>
+            </details>
+          ))}
+        </div>
+      </section>
+
+      {/* Audience Links */}
+      <section className="mx-auto max-w-4xl px-6 pb-16">
+        <h2 className="text-2xl font-bold text-white text-center mb-4">Built for Everyone</h2>
+        <p className="text-gray-400 text-center mb-8 text-sm">See how {PRODUCT_NAME} helps different professionals and use cases.</p>
+        <div className="flex flex-wrap justify-center gap-3">
+          {AUDIENCE_LINKS.map((a) => (
+            <Link key={a.slug} href={`/for/${a.slug}`} className="rounded-full border border-gray-700 px-5 py-2.5 text-sm text-gray-300 hover:border-violet-500/50 hover:text-white transition-all">
+              {a.label}
+            </Link>
           ))}
         </div>
       </section>
