@@ -16,8 +16,21 @@
  */
 import type { ReactNode } from "react";
 import type { Metadata, Viewport } from "next";
-import ExitIntentModal from "@/components/ExitIntentModal";
+import { Inter } from "next/font/google";
+import ExitIntentCapture from "@/components/ExitIntentCapture";
 import "./globals.css";
+
+/**
+ * next/font/google Inter — self-hosted by Next.js at build time.
+ * Eliminates the external Google Fonts request that caused CLS
+ * (Cumulative Layout Shift) and added ~200ms to first paint.
+ * The CSS variable --font-inter is consumed by globals.css --font-sans.
+ */
+const interFont = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
+});
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -114,6 +127,31 @@ export const metadata: Metadata = {
 };
 
 /**
+ * Organization JSON-LD — tells Google this site belongs to a real business
+ * entity (SymplyAI). Improves E-E-A-T signals and Knowledge Panel eligibility.
+ * Placed in root layout so every page carries the organization signal.
+ */
+const jsonLdOrganization = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: "LogoForge AI",
+  url: "https://generateailogo.com",
+  logo: "https://generateailogo.com/icon.png",
+  description:
+    "AI-powered logo generator — create professional logos in seconds from text prompts.",
+  parentOrganization: {
+    "@type": "Organization",
+    name: "SymplyAI",
+    url: "https://symplyai.io",
+  },
+  contactPoint: {
+    "@type": "ContactPoint",
+    contactType: "customer support",
+    url: "https://generateailogo.com/contact",
+  },
+};
+
+/**
  * BreadcrumbList JSON-LD — breadcrumb navigation in Google search results.
  */
 const jsonLdBreadcrumb = {
@@ -172,7 +210,7 @@ const jsonLdFaqPage = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" className="dark" suppressHydrationWarning>
+    <html lang="en" className={`dark ${interFont.variable}`} suppressHydrationWarning>
       <head>
         <script
           type="application/ld+json"
@@ -186,10 +224,14 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdBreadcrumb) }}
         />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdOrganization) }}
+        />
       </head>
       <body className="min-h-screen antialiased">
         {children}
-        <ExitIntentModal />
+        <ExitIntentCapture />
       </body>
     </html>
   );
