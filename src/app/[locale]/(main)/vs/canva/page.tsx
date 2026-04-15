@@ -18,10 +18,8 @@
  *
  * Created 2026-04-04 as part of SEO comparison page rollout.
  *
- * force-dynamic: prevents SSG prerender crash under [locale] generateStaticParams.
+ * force-dynamic removed 2026-04-15 — bypassed CDN cache; no per-request data needed here.
  */
-
-export const dynamic = "force-dynamic";
 
 import type { Metadata } from "next";
 import Link from "next/link";

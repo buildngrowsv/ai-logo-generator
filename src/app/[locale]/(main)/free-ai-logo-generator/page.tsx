@@ -1,4 +1,4 @@
-export const dynamic = "force-dynamic";
+// force-dynamic removed 2026-04-15 — bypassed CDN cache; this page has no per-request data needs.
 
 import type { Metadata } from "next";
 import SeoLandingPage from "@/components/seo/SeoLandingPage";

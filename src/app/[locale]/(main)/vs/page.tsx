@@ -8,13 +8,11 @@
  *
  * LOCALE NOTE:
  * Lives under [locale]/(main) matching the existing vs/looka, vs/brandmark,
- * and vs/canva pages. force-dynamic prevents SSG prerender crash under
- * generateStaticParams.
+ * and vs/canva pages. force-dynamic removed 2026-04-15 — it bypassed CDN cache;
+ * this page has no per-request data needs, so static rendering is correct.
  *
  * Created 2026-04-06 — SEO comparison hub initiative.
  */
-
-export const dynamic = "force-dynamic";
 
 import type { Metadata } from "next";
 import Link from "next/link";

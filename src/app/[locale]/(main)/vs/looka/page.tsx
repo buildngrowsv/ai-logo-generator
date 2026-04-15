@@ -18,10 +18,8 @@
  * Originally created Builder 3, 2026-04-03. Rewritten 2026-04-04 with full
  * SEO metadata, BreadcrumbList schema, visible FAQ section, and /login CTA.
  *
- * force-dynamic: prevents SSG prerender crash under [locale] generateStaticParams.
+ * force-dynamic removed 2026-04-15 — bypassed CDN cache; no per-request data needed here.
  */
-
-export const dynamic = "force-dynamic";
 
 import type { Metadata } from "next";
 import Link from "next/link";

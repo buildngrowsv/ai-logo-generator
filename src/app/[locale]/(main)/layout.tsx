@@ -19,20 +19,17 @@ import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 
 /**
- * Force dynamic rendering for all (main) routes.
+ * Static rendering for all (main) routes.
  *
- * WHY: next-intl middleware rewrites /pricing → /en/pricing at request time,
- * but Next.js 15 pre-renders these pages statically via generateStaticParams.
- * When the rewritten request hits a static page, next-intl's requestLocale
- * reads headers to resolve the locale — triggering the fatal
- * "Page changed from static to dynamic at runtime" error (500).
+ * Previously used force-dynamic because next-intl's requestLocale read
+ * headers() during prerender, triggering "Page changed from static to
+ * dynamic at runtime." The parent [locale] layout now calls
+ * setRequestLocale(locale) which prevents that header read. Pages that
+ * need setRequestLocale must accept the locale param and call it themselves.
  *
- * force-dynamic tells Next.js to always server-render these pages, which
- * allows next-intl's header-based locale detection to work correctly.
- * The performance cost is negligible — Vercel's Edge Network caches the
- * response anyway, and these pages change infrequently.
+ * Performance: force-dynamic bypassed CDN edge cache (~1.6s per request).
+ * Static rendering allows edge caching (~0.5s). Removed 2026-04-15.
  */
-export const dynamic = "force-dynamic";
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   return (

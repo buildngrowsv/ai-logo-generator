@@ -15,12 +15,10 @@
  * - Honest positioning: Hatchful was free but limited; LogoForge AI is
  *   AI-generated, unique, and actively maintained
  *
- * force-dynamic: prevents SSG prerender crash under [locale] generateStaticParams.
+ * force-dynamic removed 2026-04-15 — bypassed CDN cache; no per-request data needed here.
  *
  * Created 2026-04-13 — SEO comparison pages initiative.
  */
-
-export const dynamic = "force-dynamic";
 
 import type { Metadata } from "next";
 import Link from "next/link";
