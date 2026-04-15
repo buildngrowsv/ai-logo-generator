@@ -75,13 +75,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       siteName: t("siteName"),
       locale: ogLocale,
       url: canonicalPath,
-      images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: "LogoForge — AI Logo Generator" }],
     },
     twitter: {
       card: "summary_large_image",
       title: t("twitterTitle"),
       description: t("twitterDescription"),
-      images: ["/opengraph-image"],
     },
     verification: {
       google: "CJx0tLzl09NcMkFKu5fAayPbWhxzqVJTyyERVA37s78",
@@ -206,6 +204,8 @@ export default async function LocaleLayout({ children, params }: Props) {
 
   return (
     <>
+      {/* Set correct lang attribute — root layout hardcodes "en" for pSEO pages */}
+      <script dangerouslySetInnerHTML={{ __html: `document.documentElement.lang="${locale}"` }} />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdSoftware) }}
