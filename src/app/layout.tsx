@@ -18,6 +18,7 @@ import type { ReactNode } from "react";
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import ExitIntentCapture from "@/components/ExitIntentCapture";
+import StickyBottomCTA from "@/components/StickyBottomCTA";
 import "./globals.css";
 
 /**
@@ -226,6 +227,24 @@ const jsonLdWebSite = {
   },
 };
 
+/**
+ * HowTo JSON-LD — enables "How to" rich results in Google SERPs.
+ * Targets "how to create a logo with AI" queries with step-by-step instructions.
+ */
+const jsonLdHowTo = {
+  "@context": "https://schema.org",
+  "@type": "HowTo",
+  name: "How to Create a Logo with AI",
+  description: "Use LogoForge AI to generate professional logos in seconds — describe your brand, pick a style, and download.",
+  totalTime: "PT1M",
+  tool: { "@type": "HowToTool", name: "LogoForge AI (generateailogo.com)" },
+  step: [
+    { "@type": "HowToStep", position: 1, name: "Describe your brand", text: "Enter your business name and a brief description of your brand identity, industry, and preferred colors." },
+    { "@type": "HowToStep", position: 2, name: "Choose a logo style", text: "Select from minimalist, modern, vintage, playful, or other AI-powered design styles tailored to your brand." },
+    { "@type": "HowToStep", position: 3, name: "Download your logo", text: "Preview AI-generated logo options, refine your favorite, and download in high-resolution PNG format." },
+  ],
+};
+
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" className={`dark ${interFont.variable}`} suppressHydrationWarning>
@@ -250,10 +269,15 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdWebSite) }}
         />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdHowTo) }}
+        />
       </head>
       <body className="min-h-screen antialiased">
         {children}
         <ExitIntentCapture />
+        <StickyBottomCTA />
       </body>
     </html>
   );
