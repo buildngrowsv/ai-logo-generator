@@ -401,6 +401,39 @@ export default function HomePageContent() {
       </section>
 
       {/* ============================================================
+       * SECURITY & TRUST BADGES — Conversion-critical trust signals.
+       * Business owners creating logos need reassurance about data
+       * handling and brand ownership before using the tool.
+       * ============================================================ */}
+      <section className="border-t border-border/40 py-16">
+        <div className="container mx-auto max-w-4xl px-4 text-center">
+          <h2 className="text-2xl font-bold tracking-tight">Your Privacy, Protected</h2>
+          <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-6">
+            <div className="flex flex-col items-center gap-2 p-4 rounded-xl bg-muted/30">
+              <span className="text-2xl">&#128274;</span>
+              <span className="text-sm font-medium">256-bit Encryption</span>
+              <span className="text-xs text-muted-foreground">Bank-grade security</span>
+            </div>
+            <div className="flex flex-col items-center gap-2 p-4 rounded-xl bg-muted/30">
+              <span className="text-2xl">&#128465;</span>
+              <span className="text-sm font-medium">No Data Stored</span>
+              <span className="text-xs text-muted-foreground">Designs are yours alone</span>
+            </div>
+            <div className="flex flex-col items-center gap-2 p-4 rounded-xl bg-muted/30">
+              <span className="text-2xl">&#127919;</span>
+              <span className="text-sm font-medium">GDPR Compliant</span>
+              <span className="text-xs text-muted-foreground">EU data protection</span>
+            </div>
+            <div className="flex flex-col items-center gap-2 p-4 rounded-xl bg-muted/30">
+              <span className="text-2xl">&#9989;</span>
+              <span className="text-sm font-medium">Full Commercial Rights</span>
+              <span className="text-xs text-muted-foreground">Use your logos anywhere</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ============================================================
        * FINAL CTA
        * Glowing conversion box at the bottom of the page.
        * Uses brand gradient for the glow effect.
