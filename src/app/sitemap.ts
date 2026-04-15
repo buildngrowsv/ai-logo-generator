@@ -69,6 +69,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     ...forPagePaths,
     ...bestPagePaths,
     ...useCasePagePaths,
+    "/contact",
+    "/about",
   ];
   const entries: MetadataRoute.Sitemap = [];
   for (const path of paths) {

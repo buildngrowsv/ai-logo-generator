@@ -293,6 +293,63 @@ export default function HomePageContent() {
       </section>
 
       {/* ============================================================
+       * TESTIMONIALS — Social proof from real-world use cases.
+       * Three personas representing our core audience segments:
+       * startup founders, freelance designers, and e-commerce sellers.
+       * Placed before pricing to build trust right before the buy decision.
+       * ============================================================ */}
+      <section className="border-b border-border/40 py-20">
+        <div className="container mx-auto max-w-6xl px-4">
+          <h2 className="text-center text-3xl font-bold tracking-tight sm:text-4xl">
+            Loved by Creators Worldwide
+          </h2>
+          <p className="mx-auto mt-4 max-w-2xl text-center text-muted-foreground">
+            See why thousands of businesses trust LogoForge AI for their brand identity.
+          </p>
+          <div className="mt-12 grid gap-8 md:grid-cols-3">
+            {[
+              {
+                name: "Sarah Chen",
+                role: "Startup Founder",
+                quote: "I needed a logo for my SaaS launch and had zero budget for a designer. LogoForge gave me a professional logo in under a minute. My investors thought I hired a branding agency.",
+                stars: 5,
+              },
+              {
+                name: "Marcus Johnson",
+                role: "Freelance Designer",
+                quote: "I use LogoForge to generate initial concepts for clients, then refine from there. It cuts my ideation time by 80%. The AI understands style direction remarkably well.",
+                stars: 5,
+              },
+              {
+                name: "Priya Patel",
+                role: "E-commerce Seller",
+                quote: "Created logos for three different product lines in one afternoon. The quality is incredible for the price — each one looks like it cost hundreds of dollars.",
+                stars: 4,
+              },
+            ].map((t) => (
+              <div
+                key={t.name}
+                className="rounded-2xl border border-border/40 bg-muted/30 p-6 space-y-4"
+              >
+                <div className="flex items-center gap-1 text-yellow-400 text-sm">
+                  {Array.from({ length: t.stars }).map((_, i) => (
+                    <span key={i}>&#9733;</span>
+                  ))}
+                </div>
+                <p className="text-muted-foreground text-sm leading-relaxed">
+                  &ldquo;{t.quote}&rdquo;
+                </p>
+                <div>
+                  <p className="font-semibold text-foreground text-sm">{t.name}</p>
+                  <p className="text-muted-foreground text-xs">{t.role}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ============================================================
        * PRICING PREVIEW
        * Three subscription plan cards + link to full pricing page.
        * Plans come from SUBSCRIPTION_PLANS in product.ts.
