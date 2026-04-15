@@ -6,6 +6,7 @@ import CookieConsent from "@/components/CookieConsent";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import HomePageContent from "@/components/HomePageContent";
 import { SeoInternalLinks } from "@/components/SeoInternalLinks";
+import TrustBadges from "@/components/TrustBadges";
 
 /**
  * FAQ items for JSON-LD FAQPage schema — enables Google rich snippets
@@ -134,6 +135,9 @@ export default async function RootHomePage() {
         <LanguageSwitcher locale="en" />
         <HomePageContent />
       </NextIntlClientProvider>
+
+      {/* Trust / security badges — conversion-critical social proof strip */}
+      <TrustBadges />
 
       {/* ================================================================
        * PRICING CTA SECTION
