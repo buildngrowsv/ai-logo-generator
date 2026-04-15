@@ -120,7 +120,7 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://generateailogo.com"),
   title: "AI Logo Generator Free — Create Professional Logos in Seconds",
   description:
-    "Generate custom business logos with AI in under 30 seconds. Enter your brand name, pick a style, get unlimited variations. 3 free logos, no signup. Cheaper than Looka ($20+) or Brandmark ($25+).",
+    "Generate custom business logos with AI in under 30 seconds. Enter your brand name, pick a style, get multiple variations. 3 free daily, no signup. Cheaper than Looka ($20+) or Brandmark ($25+).",
   alternates: {
     canonical: "https://generateailogo.com",
   },

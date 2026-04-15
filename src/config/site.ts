@@ -36,7 +36,7 @@ export const siteConfig = {
    * One-sentence product description — focuses on speed + quality value prop
    * that differentiates from expensive manual design services.
    */
-  siteDescription: "Create stunning professional logos in seconds with AI. Enter your business name, pick a style, and get unlimited logo variations.",
+  siteDescription: "Create stunning professional logos in seconds with AI. Enter your business name, pick a style, and get multiple logo variations. 3 free daily.",
 
   /**
    * Production URL — will be set once deployed to Vercel with custom domain.

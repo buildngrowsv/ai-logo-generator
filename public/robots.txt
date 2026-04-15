@@ -2,5 +2,6 @@ User-Agent: *
 Allow: /
 Disallow: /api/
 Disallow: /_next/
+Disallow: /dashboard
 
 Sitemap: https://generateailogo.com/sitemap.xml
