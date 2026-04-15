@@ -45,10 +45,23 @@ export function generateStaticParams() {
 type Props = { children: React.ReactNode; params: Promise<{ locale: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { locale } = await params;
-  if (!routing.locales.includes(locale as "en" | "es" | "fr" | "de" | "pt")) {
-    notFound();
-  }
+  const { locale: rawLocale } = await params;
+  /**
+   * Graceful locale fallback for metadata generation.
+   *
+   * WHY NOT notFound(): With localePrefix "as-needed", bare paths like /pricing
+   * arrive as [locale]="pricing". Calling notFound() here injects
+   * <meta name="robots" content="noindex"/> — making the pricing page invisible
+   * to Google. Instead, fall back to default locale metadata so the page gets
+   * proper SEO tags. The page content already falls back via i18n/request.ts.
+   *
+   * ROOT CAUSE: next-intl middleware rewrite sometimes doesn't fire for
+   * non-locale path segments when force-dynamic is set, causing the URL
+   * to hit [locale] with the path segment as the locale value.
+   */
+  const locale = routing.locales.includes(rawLocale as "en" | "es" | "fr" | "de" | "pt")
+    ? rawLocale
+    : routing.defaultLocale;
   const t = await getTranslations({ locale, namespace: "Meta" });
   const dict = (await import(`../../messages/${locale}.json`)).default as {
     Meta: { keywordList: string[] };
@@ -195,10 +208,15 @@ const jsonLdHowTo = {
 };
 
 export default async function LocaleLayout({ children, params }: Props) {
-  const { locale } = await params;
-  if (!routing.locales.includes(locale as "en" | "es" | "fr" | "de" | "pt")) {
-    notFound();
-  }
+  const { locale: rawLocale } = await params;
+  /**
+   * Same graceful fallback as generateMetadata — render with default locale
+   * instead of 404 when the path segment isn't a valid locale. Matches the
+   * behavior of i18n/request.ts which also falls back to defaultLocale.
+   */
+  const locale = routing.locales.includes(rawLocale as "en" | "es" | "fr" | "de" | "pt")
+    ? rawLocale
+    : routing.defaultLocale;
   setRequestLocale(locale);
   const messages = await getMessages();
 
