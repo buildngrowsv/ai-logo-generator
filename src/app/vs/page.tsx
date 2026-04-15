@@ -100,6 +100,17 @@ const COMPARISONS = [
       "$4.90/mo unlimited vs per-download pricing",
     ],
   },
+  {
+    slug: "logoai",
+    name: "Logo AI",
+    tagline:
+      "3 free logos and $4.90/mo unlimited vs Logo AI's $29–$99 per-logo purchase model",
+    highlights: [
+      "3 free hi-res logos vs zero free downloads on Logo AI",
+      "$4.90/mo unlimited vs $29 per basic Logo AI purchase",
+      "Generative AI vs Logo AI's curated style system",
+    ],
+  },
 ];
 
 // ---------------------------------------------------------------------------
