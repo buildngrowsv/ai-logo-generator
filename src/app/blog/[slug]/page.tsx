@@ -1,49 +1,29 @@
 /**
- * =============================================================================
- * /blog/[slug] — Individual Blog Post Page
- * =============================================================================
+ * /blog/[slug] — Standalone blog post page (no locale prefix).
  *
- * PURPOSE:
- * Renders a single blog post with full article content, structured data for
- * Google rich results (Article, FAQPage, BreadcrumbList), and internal linking
- * via related posts and CTAs.
+ * Imports from @/config/blog-posts (canonical source) to match the sitemap.
+ * The config interface uses `contentHtml` (full HTML), `metaDescription`,
+ * `metaTitle`, `readingTimeMinutes` (number), and `getRelatedPosts(slug, limit)`.
  *
- * STATIC GENERATION:
- * - dynamicParams = false ensures unknown slugs return 404 instead of hanging.
- * - generateStaticParams() builds all known slugs at build time.
- * - generateMetadata() creates per-post OG tags and canonical URLs.
- *
- * LAYOUT NOTE:
- * Root layout provides <html>/<body>. This page renders content only.
- *
- * NEXT.JS 15+ NOTE:
- * params is Promise<{ slug: string }> — must be awaited.
- * =============================================================================
+ * vortex-build-4821 (2026-04-15): Rewired to use @/config/blog-posts.
  */
+
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import {
-  BLOG_POSTS,
-  getBlogPostBySlug,
-  getRelatedPosts,
-} from "../blog-posts";
+import { BLOG_POSTS, getBlogPostBySlug, getRelatedPosts } from "@/config/blog-posts";
 
-/* ------------------------------------------------------------------ */
-/* Static generation config                                            */
-/* ------------------------------------------------------------------ */
+const SITE_URL = "https://generateailogo.com";
 
-/** Prevents Next.js from attempting to SSR unknown slugs dynamically. */
+/* ── Static generation ─────────────────────────────────────────────── */
+
 export const dynamicParams = false;
 
-/** Build a static page for every blog post at build time. */
 export function generateStaticParams() {
   return BLOG_POSTS.map((post) => ({ slug: post.slug }));
 }
 
-/* ------------------------------------------------------------------ */
-/* Metadata                                                            */
-/* ------------------------------------------------------------------ */
+/* ── Metadata ──────────────────────────────────────────────────────── */
 
 export async function generateMetadata({
   params,
@@ -52,116 +32,44 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params;
   const post = getBlogPostBySlug(slug);
-  if (!post) return {};
+  if (!post) return { title: "Post Not Found" };
 
   return {
-    title: `${post.title} | GenerateAILogo`,
+    title: `${post.metaTitle} | GenerateAILogo`,
     description: post.metaDescription,
-    alternates: {
-      canonical: `https://generateailogo.com/blog/${post.slug}`,
-    },
+    alternates: { canonical: `${SITE_URL}/blog/${post.slug}` },
     openGraph: {
-      title: post.title,
+      title: post.metaTitle,
       description: post.metaDescription,
+      url: `${SITE_URL}/blog/${post.slug}`,
       type: "article",
-      url: `https://generateailogo.com/blog/${post.slug}`,
       siteName: "GenerateAILogo",
       publishedTime: post.publishedAt,
       modifiedTime: post.updatedAt,
+      images: [{ url: "/opengraph-image", width: 1200, height: 630 }],
     },
     robots: { index: true, follow: true },
   };
 }
 
-/* ------------------------------------------------------------------ */
-/* JSON-LD helpers                                                     */
-/* ------------------------------------------------------------------ */
+/* ── Category badge colors ─────────────────────────────────────────── */
 
-function buildArticleJsonLd(post: NonNullable<ReturnType<typeof getBlogPostBySlug>>) {
-  return {
-    "@context": "https://schema.org",
-    "@type": "Article",
-    headline: post.title,
-    description: post.metaDescription,
-    datePublished: post.publishedAt,
-    dateModified: post.updatedAt,
-    url: `https://generateailogo.com/blog/${post.slug}`,
-    publisher: {
-      "@type": "Organization",
-      name: "GenerateAILogo",
-      url: "https://generateailogo.com",
-    },
-    mainEntityOfPage: {
-      "@type": "WebPage",
-      "@id": `https://generateailogo.com/blog/${post.slug}`,
-    },
-  };
-}
-
-function buildFaqJsonLd(faqs: { question: string; answer: string }[]) {
-  return {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    mainEntity: faqs.map((faq) => ({
-      "@type": "Question",
-      name: faq.question,
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: faq.answer,
-      },
-    })),
-  };
-}
-
-function buildBreadcrumbJsonLd(postTitle: string, postSlug: string) {
-  return {
-    "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
-    itemListElement: [
-      {
-        "@type": "ListItem",
-        position: 1,
-        name: "Home",
-        item: "https://generateailogo.com",
-      },
-      {
-        "@type": "ListItem",
-        position: 2,
-        name: "Blog",
-        item: "https://generateailogo.com/blog",
-      },
-      {
-        "@type": "ListItem",
-        position: 3,
-        name: postTitle,
-        item: `https://generateailogo.com/blog/${postSlug}`,
-      },
-    ],
-  };
-}
-
-/* ------------------------------------------------------------------ */
-/* Category badge color helper                                         */
-/* ------------------------------------------------------------------ */
-
-function categoryBadgeClasses(
-  category: "comparison" | "guide" | "listicle" | "tutorial",
-): string {
-  switch (category) {
+function categoryBadgeClasses(category: string): string {
+  switch (category.toLowerCase()) {
     case "comparison":
       return "bg-blue-500/20 text-blue-300 border-blue-500/30";
-    case "guide":
-      return "bg-emerald-500/20 text-emerald-300 border-emerald-500/30";
-    case "listicle":
+    case "roundup":
       return "bg-amber-500/20 text-amber-300 border-amber-500/30";
     case "tutorial":
       return "bg-violet-500/20 text-violet-300 border-violet-500/30";
+    case "guide":
+      return "bg-emerald-500/20 text-emerald-300 border-emerald-500/30";
+    default:
+      return "bg-zinc-500/20 text-zinc-300 border-zinc-500/30";
   }
 }
 
-/* ------------------------------------------------------------------ */
-/* Page component                                                      */
-/* ------------------------------------------------------------------ */
+/* ── Page component ────────────────────────────────────────────────── */
 
 export default async function BlogPostPage({
   params,
@@ -172,56 +80,67 @@ export default async function BlogPostPage({
   const post = getBlogPostBySlug(slug);
   if (!post) notFound();
 
-  const relatedPosts = getRelatedPosts(post.relatedSlugs);
+  const relatedPosts = getRelatedPosts(post.slug, 2);
+
+  const articleJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: post.title,
+    description: post.metaDescription,
+    datePublished: post.publishedAt,
+    dateModified: post.updatedAt,
+    author: { "@type": "Organization", name: "GenerateAILogo", url: SITE_URL },
+    publisher: { "@type": "Organization", name: "GenerateAILogo", url: SITE_URL },
+    mainEntityOfPage: `${SITE_URL}/blog/${post.slug}`,
+    image: `${SITE_URL}/opengraph-image`,
+  };
+
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: SITE_URL },
+      { "@type": "ListItem", position: 2, name: "Blog", item: `${SITE_URL}/blog` },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: post.title,
+        item: `${SITE_URL}/blog/${post.slug}`,
+      },
+    ],
+  };
 
   return (
     <>
-      {/* ---- JSON-LD structured data ---- */}
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(buildArticleJsonLd(post)),
-        }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }}
       />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(buildBreadcrumbJsonLd(post.title, post.slug)),
-        }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />
-      {post.faqs.length > 0 && (
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify(buildFaqJsonLd(post.faqs)),
-          }}
-        />
-      )}
 
       <main className="min-h-screen bg-gradient-to-b from-zinc-950 via-zinc-900 to-zinc-950 text-zinc-100">
         <article className="mx-auto max-w-3xl px-4 pt-20 pb-16">
-          {/* ---- Breadcrumb navigation ---- */}
+          {/* Breadcrumb */}
           <nav className="mb-8 text-sm text-zinc-400">
-            <Link href="/" className="hover:text-white transition-colors">
-              Home
-            </Link>
+            <Link href="/" className="hover:text-white transition-colors">Home</Link>
             <span className="mx-2">/</span>
-            <Link href="/blog" className="hover:text-white transition-colors">
-              Blog
-            </Link>
+            <Link href="/blog" className="hover:text-white transition-colors">Blog</Link>
             <span className="mx-2">/</span>
             <span className="text-zinc-200 line-clamp-1">{post.title}</span>
           </nav>
 
-          {/* ---- Article header ---- */}
+          {/* Article header */}
           <header className="mb-10">
             <div className="flex items-center gap-3 text-xs mb-4">
               <span
-                className={`inline-block rounded-full border px-2.5 py-0.5 font-medium capitalize ${categoryBadgeClasses(post.category)}`}
+                className={`inline-block rounded-full border px-2.5 py-0.5 font-medium ${categoryBadgeClasses(post.category)}`}
               >
                 {post.category}
               </span>
-              <span className="text-zinc-500">{post.readTime}</span>
+              <span className="text-zinc-500">{post.readingTimeMinutes} min read</span>
               <span className="text-zinc-600">|</span>
               <time className="text-zinc-500" dateTime={post.publishedAt}>
                 {new Date(post.publishedAt).toLocaleDateString("en-US", {
@@ -241,90 +160,27 @@ export default async function BlogPostPage({
             </p>
           </header>
 
-          {/* ---- Article sections ---- */}
-          {post.sections.map((section, sectionIndex) => (
-            <section key={section.heading} className="mb-10">
-              <h2 className="text-2xl font-semibold text-zinc-100 mb-4">
-                {section.heading}
-              </h2>
+          {/* Article body (HTML from config/blog-posts.ts) */}
+          <div
+            className="prose prose-invert prose-zinc max-w-none prose-headings:text-white prose-a:text-violet-400 prose-strong:text-white prose-li:text-zinc-300"
+            dangerouslySetInnerHTML={{ __html: post.contentHtml }}
+          />
 
-              {section.body.map((paragraph, pIndex) => (
-                <p
-                  key={pIndex}
-                  className="text-zinc-300 leading-relaxed mb-4"
-                >
-                  {paragraph}
-                </p>
-              ))}
+          {/* Mid-article CTA */}
+          <div className="my-10 rounded-xl border border-violet-500/20 bg-violet-950/30 p-6 text-center">
+            <p className="text-sm font-medium text-violet-300 mb-2">Try it yourself</p>
+            <p className="text-zinc-400 text-sm mb-4">
+              Generate 3 free AI logos — no sign-up required.
+            </p>
+            <Link
+              href="/"
+              className="inline-flex items-center rounded-full bg-violet-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-violet-600/20 hover:bg-violet-500 transition-colors"
+            >
+              Create Your Logo Free
+            </Link>
+          </div>
 
-              {section.listItems && section.listItems.length > 0 && (
-                <ul className="list-disc list-inside space-y-2 text-zinc-300 mb-4 pl-2">
-                  {section.listItems.map((item, liIndex) => (
-                    <li key={liIndex} className="leading-relaxed">
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-              )}
-
-              {/* ---- Mid-article CTA (after the 2nd section) ---- */}
-              {sectionIndex === 1 && (
-                <div className="my-8 rounded-xl border border-violet-500/20 bg-violet-950/30 p-6 text-center">
-                  <p className="text-sm font-medium text-violet-300 mb-2">
-                    Try it yourself
-                  </p>
-                  <p className="text-zinc-400 text-sm mb-4">
-                    Generate 3 free AI logos — no sign-up required.
-                  </p>
-                  <Link
-                    href="/"
-                    className="inline-flex items-center rounded-full bg-violet-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-violet-600/20 hover:bg-violet-500 transition-colors"
-                  >
-                    Create Your Logo Free
-                  </Link>
-                </div>
-              )}
-            </section>
-          ))}
-
-          {/* ---- FAQ accordion ---- */}
-          {post.faqs.length > 0 && (
-            <section className="mb-12">
-              <h2 className="text-2xl font-semibold text-zinc-100 mb-6">
-                Frequently Asked Questions
-              </h2>
-              <div className="space-y-4">
-                {post.faqs.map((faq) => (
-                  <details
-                    key={faq.question}
-                    className="group rounded-xl border border-zinc-800 bg-zinc-900/60 open:border-violet-500/30"
-                  >
-                    <summary className="cursor-pointer select-none px-5 py-4 text-zinc-100 font-medium flex items-center justify-between">
-                      {faq.question}
-                      <svg
-                        className="h-5 w-5 text-zinc-500 transition-transform group-open:rotate-180"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        strokeWidth={2}
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M19 9l-7 7-7-7"
-                        />
-                      </svg>
-                    </summary>
-                    <div className="px-5 pb-4 text-zinc-400 leading-relaxed">
-                      {faq.answer}
-                    </div>
-                  </details>
-                ))}
-              </div>
-            </section>
-          )}
-
-          {/* ---- Related posts ---- */}
+          {/* Related posts */}
           {relatedPosts.length > 0 && (
             <section className="mb-12">
               <h2 className="text-2xl font-semibold text-zinc-100 mb-6">
@@ -338,7 +194,7 @@ export default async function BlogPostPage({
                     className="group flex flex-col rounded-xl border border-zinc-800 bg-zinc-900/60 p-5 transition-all hover:border-violet-500/40 hover:bg-zinc-900"
                   >
                     <span
-                      className={`inline-block self-start rounded-full border px-2 py-0.5 text-xs font-medium capitalize mb-2 ${categoryBadgeClasses(related.category)}`}
+                      className={`inline-block self-start rounded-full border px-2 py-0.5 text-xs font-medium mb-2 ${categoryBadgeClasses(related.category)}`}
                     >
                       {related.category}
                     </span>
@@ -346,7 +202,7 @@ export default async function BlogPostPage({
                       {related.title}
                     </h3>
                     <p className="mt-1 text-xs text-zinc-500">
-                      {related.readTime}
+                      {related.readingTimeMinutes} min read
                     </p>
                   </Link>
                 ))}
@@ -354,15 +210,14 @@ export default async function BlogPostPage({
             </section>
           )}
 
-          {/* ---- Bottom CTA ---- */}
+          {/* Bottom CTA */}
           <section className="text-center">
             <div className="rounded-2xl border border-violet-500/30 bg-gradient-to-br from-violet-950/50 to-fuchsia-950/50 p-10">
               <h2 className="text-2xl font-bold text-white mb-3">
                 Ready to Create Your Logo?
               </h2>
               <p className="text-zinc-300 mb-6">
-                Try GenerateAILogo free — 3 AI-generated logos, no sign-up
-                required.
+                Try GenerateAILogo free — 3 AI-generated logos, no sign-up required.
               </p>
               <Link
                 href="/"
