@@ -31,6 +31,34 @@ export function LandingFooter() {
             </span>
           </div>
 
+          {/* Product links — internal linking for SEO crawl depth */}
+          <div className="flex items-center gap-6 text-sm text-text-muted">
+            <a
+              href="/pricing"
+              className="hover:text-text-secondary transition-colors"
+            >
+              Pricing
+            </a>
+            <a
+              href="/blog"
+              className="hover:text-text-secondary transition-colors"
+            >
+              Blog
+            </a>
+            <a
+              href="/faq"
+              className="hover:text-text-secondary transition-colors"
+            >
+              FAQ
+            </a>
+            <a
+              href="/about"
+              className="hover:text-text-secondary transition-colors"
+            >
+              About
+            </a>
+          </div>
+
           {/* Legal links */}
           <div className="flex items-center gap-6 text-sm text-text-muted">
             <a
