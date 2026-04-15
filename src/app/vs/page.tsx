@@ -21,6 +21,7 @@ import Link from "next/link";
 import { BreadcrumbJsonLd } from "@/components/BreadcrumbJsonLd";
 import { SeoCrossLinks } from "@/components/SeoCrossLinks";
 import { SeoInternalLinks } from "@/components/SeoInternalLinks";
+import { siteConfig } from "@/config/site";
 // ---------------------------------------------------------------------------
 // Metadata — targets "AI logo generator comparison" cluster
 // ---------------------------------------------------------------------------
@@ -101,8 +102,8 @@ export default function VsIndexPage() {
         {/* BreadcrumbList JSON-LD — breadcrumb rich snippets in Google SERPs */}
         <BreadcrumbJsonLd
           items={[
-            { name: "Home", url: "" },
-            { name: "Alternatives", url: `${""}/vs` },
+            { name: "Home", url: siteConfig.siteUrl },
+            { name: "Alternatives", url: `${siteConfig.siteUrl}/vs` },
           ]}
         />
 
@@ -114,7 +115,7 @@ export default function VsIndexPage() {
             "@context": "https://schema.org",
             "@type": "CollectionPage",
             name: metadata.title,
-            url: canonicalUrl,
+            url: `${siteConfig.siteUrl}/vs`,
             mainEntity: {
               "@type": "ItemList",
               itemListElement: COMPARISONS.map((comp, index) => ({
