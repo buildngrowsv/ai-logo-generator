@@ -41,6 +41,27 @@ export const metadata: Metadata = {
   },
 };
 
+/**
+ * BreadcrumbList JSON-LD — helps Google display breadcrumb navigation
+ * (Home > Pricing) in search results, improving click-through rate.
+ */
+const breadcrumbJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  itemListElement: [
+    { "@type": "ListItem", position: 1, name: "Home", item: SITE_URL },
+    { "@type": "ListItem", position: 2, name: "Pricing", item: `${SITE_URL}/pricing` },
+  ],
+};
+
 export default function PricingPage() {
-  return <PricingPageClient />;
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
+      <PricingPageClient />
+    </>
+  );
 }
