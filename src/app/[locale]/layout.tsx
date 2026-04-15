@@ -17,6 +17,25 @@ import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { siteConfig } from "@/config/site";
 /* globals.css is now imported in the root layout (src/app/layout.tsx) */
 
+/**
+ * Force dynamic rendering for ALL locale-routed pages.
+ *
+ * ROOT CAUSE: With localePrefix "as-needed", next-intl middleware rewrites
+ * /pricing → /en/pricing internally. But Next.js 15 pre-renders these pages
+ * statically via generateStaticParams at build time. When the rewritten
+ * request arrives at runtime, next-intl's getRequestConfig reads headers()
+ * to determine the locale — which conflicts with the static pre-render,
+ * throwing "Page changed from static to dynamic at runtime, reason: headers".
+ *
+ * force-dynamic tells Next.js to always server-render these pages, allowing
+ * next-intl's header-based locale detection to work correctly. Performance
+ * impact is minimal — Vercel's Edge Network and ISR cache the responses.
+ *
+ * This affects: /pricing, /about, /faq, /blog, /login, and all other pages
+ * under [locale]/ that are routed through next-intl middleware.
+ */
+export const dynamic = "force-dynamic";
+
 const productionSiteUrl = siteConfig.siteUrl;
 
 export function generateStaticParams() {
@@ -140,6 +159,43 @@ const jsonLdFaq = {
   ],
 };
 
+/**
+ * HowTo JSON-LD — targets "how to make a logo with AI" instructional queries.
+ * Google displays step-by-step rich snippets; AI engines cite steps directly.
+ */
+const jsonLdHowTo = {
+  "@context": "https://schema.org",
+  "@type": "HowTo",
+  name: "How to Create a Professional Logo with AI",
+  description:
+    "Design a professional logo in 3 easy steps using LogoForge AI — free, no design skills needed.",
+  totalTime: "PT60S",
+  tool: {
+    "@type": "HowToTool",
+    name: "LogoForge AI (generateailogo.com)",
+  },
+  step: [
+    {
+      "@type": "HowToStep",
+      position: 1,
+      name: "Enter your business name",
+      text: "Type your business or brand name and optionally add a tagline or description. No account required to start.",
+    },
+    {
+      "@type": "HowToStep",
+      position: 2,
+      name: "Choose a style category",
+      text: "Select from style categories like minimalist, tech, luxury, or playful. The AI generates multiple logo variations based on your choice.",
+    },
+    {
+      "@type": "HowToStep",
+      position: 3,
+      name: "Download your logo",
+      text: "Pick your favorite variation and download a high-resolution PNG. Use it for websites, business cards, social media, and merchandise.",
+    },
+  ],
+};
+
 export default async function LocaleLayout({ children, params }: Props) {
   const { locale } = await params;
   if (!routing.locales.includes(locale as "en" | "es" | "fr" | "de" | "pt")) {
@@ -157,6 +213,10 @@ export default async function LocaleLayout({ children, params }: Props) {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdFaq) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdHowTo) }}
       />
       {/* GA4 with consent mode — GoogleAnalyticsLoader reads env var internally */}
       <GoogleAnalyticsLoader />

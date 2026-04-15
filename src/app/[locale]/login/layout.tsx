@@ -12,6 +12,13 @@
 import type { Metadata } from "next";
 import { siteConfig } from "@/config/site";
 
+/**
+ * Force dynamic rendering — same reason as (main)/layout.tsx.
+ * next-intl middleware rewrites /login → /en/login; without this,
+ * the static-to-dynamic runtime error kills the page with 500.
+ */
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: `Login | ${siteConfig.siteName}`,
   description: `Sign in to ${siteConfig.siteName} with your Google account.`,
