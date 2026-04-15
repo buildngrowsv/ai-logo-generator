@@ -19,7 +19,6 @@
  */
 
 import type { Metadata } from "next";
-import { FAQ_ITEMS } from "@/config/product";
 import PricingPageClient from "./PricingPageClient";
 
 const SITE_URL = process.env.NEXT_PUBLIC_APP_URL?.trim() || "https://generateailogo.com";
@@ -53,70 +52,8 @@ const breadcrumbJsonLd = {
   ],
 };
 
-/**
- * FAQPage JSON-LD — enables Google FAQ rich results (expandable Q&A blocks in
- * search snippets). Data sourced from FAQ_ITEMS so rendered UI and structured
- * data stay in sync.
- */
-const faqJsonLd = {
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  mainEntity: FAQ_ITEMS.map((item) => ({
-    "@type": "Question",
-    name: item.question,
-    acceptedAnswer: {
-      "@type": "Answer",
-      text: item.answer,
-    },
-  })),
-};
-
-/**
- * SoftwareApplication + Offer JSON-LD — enables Google rich snippets showing
- * price and application category for "[product] pricing" queries.
- */
-const pricingJsonLd = {
-  "@context": "https://schema.org",
-  "@type": "SoftwareApplication",
-  name: "LogoForge AI",
-  applicationCategory: "DesignApplication",
-  operatingSystem: "Web",
-  url: `${SITE_URL}/pricing`,
-  offers: [
-    {
-      "@type": "Offer",
-      name: "Free",
-      price: "0",
-      priceCurrency: "USD",
-      description: "3 free logo generations (15 credits)",
-      availability: "https://schema.org/InStock",
-    },
-    {
-      "@type": "Offer",
-      name: "Starter",
-      price: "4.90",
-      priceCurrency: "USD",
-      description: "30 credits per month",
-      availability: "https://schema.org/InStock",
-    },
-    {
-      "@type": "Offer",
-      name: "Pro",
-      price: "14.90",
-      priceCurrency: "USD",
-      description: "100 credits per month, priority processing",
-      availability: "https://schema.org/InStock",
-    },
-    {
-      "@type": "Offer",
-      name: "Business",
-      price: "39.90",
-      priceCurrency: "USD",
-      description: "300 credits per month, team features, API access",
-      availability: "https://schema.org/InStock",
-    },
-  ],
-};
+/* FAQPage + SoftwareApplication JSON-LD removed — pricing/layout.tsx already provides both.
+   Duplicate JSON-LD on the same page causes Google "duplicate field" warnings. */
 
 export default function PricingPage() {
   return (
@@ -125,14 +62,7 @@ export default function PricingPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(pricingJsonLd) }}
-      />
+      {/* FAQPage + SoftwareApplication provided by pricing/layout.tsx */}
       <PricingPageClient />
     </>
   );
