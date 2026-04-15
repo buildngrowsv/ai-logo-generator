@@ -129,6 +129,22 @@ export default async function BestPage({ params }: BestPageProps) {
   const productName = PRODUCT_CONFIG.name;
   const faqJsonLd = buildBestPageFaqJsonLd(productName, page);
 
+  /** ItemList JSON-LD — marks feature checklist as a structured list for
+   *  Google rich results (carousel / listicle snippets). */
+  const itemListJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name: page.title,
+    description: page.description,
+    numberOfItems: page.features.length,
+    itemListElement: page.features.map((feature, idx) => ({
+      "@type": "ListItem",
+      position: idx + 1,
+      name: feature,
+      url: `${siteConfig.siteUrl}/best/${slug}`,
+    })),
+  };
+
   /** Other best pages for cross-linking */
   const otherBestPages = SEO_PAGES_CONFIG.bestPages.filter(
     (p) => p.slug !== slug
@@ -140,6 +156,12 @@ export default async function BestPage({ params }: BestPageProps) {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+      />
+
+      {/* ItemList JSON-LD — feature checklist as structured list for rich results */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListJsonLd) }}
       />
 
       {/* BreadcrumbList JSON-LD — breadcrumb rich snippets in Google SERPs */}
