@@ -123,53 +123,6 @@ const jsonLdSoftware = {
   ],
 };
 
-const jsonLdFaq = {
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  mainEntity: [
-    {
-      "@type": "Question",
-      name: "Is LogoForge AI free to try?",
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: "Yes. New accounts receive free credits to generate logos before upgrading. No credit card required to start.",
-      },
-    },
-    {
-      "@type": "Question",
-      name: "Can I use logos commercially?",
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: "Yes. Generated logos are yours to use commercially for business cards, websites, social media, and merchandise subject to plan terms.",
-      },
-    },
-    {
-      "@type": "Question",
-      name: "How does LogoForge AI compare to Looka or Brandmark?",
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: "LogoForge AI uses FLUX AI models to generate logos from text prompts with multiple style categories. Plans start at $4.90/month versus Looka ($20+) and Brandmark ($25+). LogoForge offers a free tier so you can try before buying.",
-      },
-    },
-    {
-      "@type": "Question",
-      name: "What file formats can I download my logo in?",
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: "LogoForge AI generates high-resolution logo images that you can download and use across all platforms including websites, print materials, and social media profiles.",
-      },
-    },
-    {
-      "@type": "Question",
-      name: "How long does it take to generate a logo?",
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: "Logo generation typically takes 10-30 seconds. Enter your business name, select a style category, and the AI produces multiple variations you can choose from instantly.",
-      },
-    },
-  ],
-};
-
 /**
  * HowTo JSON-LD — targets "how to make a logo with AI" instructional queries.
  * Google displays step-by-step rich snippets; AI engines cite steps directly.
@@ -227,10 +180,6 @@ export default async function LocaleLayout({ children, params }: Props) {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdSoftware) }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdFaq) }}
       />
       <script
         type="application/ld+json"
