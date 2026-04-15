@@ -70,7 +70,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const canonicalPath = locale === "es" ? `${productionSiteUrl}/es` : productionSiteUrl;
   return {
     metadataBase: new URL(productionSiteUrl),
-    title: t("title"),
+    title: {
+      template: `%s | ${t("siteName")}`,
+      default: t("title"),
+    },
     description: t("description"),
     keywords: dict.Meta.keywordList,
     alternates: {
