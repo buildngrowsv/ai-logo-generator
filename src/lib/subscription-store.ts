@@ -110,6 +110,19 @@ function subTokenKey(token: string): string {
   return `logogen:sub:token:${token}`;
 }
 
+/**
+ * subIdToTokenKey — Redis key mapping stripeSubscriptionId → token.
+ *
+ * WHY THIS EXISTS (pane1776, 2026-04-14):
+ * The customer.subscription.deleted webhook event does NOT carry the
+ * client_reference_id (subscription token). To call cancelToken() on
+ * cancellation, we need a reverse lookup from stripeSubscriptionId → token.
+ * This key is stored at activation time alongside the token itself.
+ */
+function subIdToTokenKey(stripeSubscriptionId: string): string {
+  return `logogen:sub:subid:${stripeSubscriptionId}`;
+}
+
 // -------------------------------------------------------------------------
 // TTLs
 // -------------------------------------------------------------------------
@@ -206,8 +219,9 @@ export async function activateToken(token: string): Promise<boolean> {
  * message instead of a generic "invalid token" when they try to use the Pro feature.
  *
  * NOTE: The webhook's customer.subscription.deleted event doesn't carry
- * client_reference_id, so we cannot always resolve the token. This function
- * is available for future use when we store subscriptionId → token mapping.
+ * client_reference_id, so we cannot always resolve the token. The webhook
+ * now uses storeSubscriptionTokenMapping() at activation time and
+ * getTokenForSubscription() at cancellation time to bridge this gap.
  */
 export async function cancelToken(token: string): Promise<void> {
   const redis = getRedisClient();
@@ -218,6 +232,63 @@ export async function cancelToken(token: string): Promise<void> {
     await redis.setex(subTokenKey(token), 30 * 24 * 60 * 60, "cancelled");
   } catch (err) {
     console.error("[subscription-store] cancelToken: Redis write failed:", err);
+  }
+}
+
+/**
+ * storeSubscriptionTokenMapping — saves stripeSubscriptionId → token in Redis.
+ *
+ * Called by the webhook's checkout.session.completed handler AFTER activateToken()
+ * succeeds. This mapping lets the customer.subscription.deleted handler find the
+ * token to cancel, since deletion events don't carry client_reference_id.
+ *
+ * TTL matches ACTIVE_TTL_SECONDS (13 months) so the mapping lives as long as
+ * the token itself. If the mapping expires, the token will also have expired
+ * (or will expire via its own TTL), so there's no orphan-token risk.
+ */
+export async function storeSubscriptionTokenMapping(
+  stripeSubscriptionId: string,
+  token: string
+): Promise<void> {
+  const redis = getRedisClient();
+  if (!redis) return;
+
+  try {
+    await redis.setex(
+      subIdToTokenKey(stripeSubscriptionId),
+      ACTIVE_TTL_SECONDS,
+      token
+    );
+  } catch (err) {
+    console.error(
+      "[subscription-store] storeSubscriptionTokenMapping: Redis write failed:",
+      err
+    );
+  }
+}
+
+/**
+ * getTokenForSubscription — retrieves the token for a stripeSubscriptionId.
+ *
+ * Called by the webhook's customer.subscription.deleted handler to find the
+ * token that needs to be cancelled. Returns null if no mapping exists (e.g.
+ * pre-mapping checkouts, Redis unavailable at checkout time, or TTL expired).
+ */
+export async function getTokenForSubscription(
+  stripeSubscriptionId: string
+): Promise<string | null> {
+  const redis = getRedisClient();
+  if (!redis) return null;
+
+  try {
+    const token = await redis.get<string>(subIdToTokenKey(stripeSubscriptionId));
+    return token ?? null;
+  } catch (err) {
+    console.error(
+      "[subscription-store] getTokenForSubscription: Redis read failed:",
+      err
+    );
+    return null;
   }
 }
 

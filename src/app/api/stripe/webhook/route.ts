@@ -26,7 +26,7 @@ import { PLAN_CREDITS_ALLOCATION, PACK_CREDITS_ALLOCATION, SUBSCRIPTION_PLANS, C
 import { userProfiles } from "@/db/schema/users";
 import { subscriptions } from "@/db/schema/subscriptions";
 import { creditTransactions } from "@/db/schema/credit-transactions";
-import { activateToken } from "@/lib/subscription-store";
+import { activateToken, cancelToken, storeSubscriptionTokenMapping, getTokenForSubscription } from "@/lib/subscription-store";
 
 // T018: Require Node.js runtime for crypto.subtle HMAC (used by Stripe SDK signature
 // verification) and for Upstash Redis client which requires Node APIs.
@@ -267,6 +267,13 @@ async function handleCheckoutCompleted(event: Stripe.Event) {
   //
   // We return 200 regardless of Redis outcome so Stripe does not retry — the
   // critical DB work is already done. Redis will catch up when provisioned.
+  // Extract stripeSubscriptionId for the mapping (scoped above for subscription mode,
+  // but we also need it here for the token→subscriptionId reverse lookup on cancellation)
+  const subscriptionIdForMapping =
+    typeof completedCheckoutSession.subscription === "string"
+      ? completedCheckoutSession.subscription
+      : null;
+
   if (subscriptionToken && subscriptionToken.length >= 10) {
     const activated = await activateToken(subscriptionToken);
     if (activated) {
@@ -275,6 +282,14 @@ async function handleCheckoutCompleted(event: Stripe.Event) {
         customer: completedCheckoutSession.customer,
         email: completedCheckoutSession.customer_details?.email ?? completedCheckoutSession.customer_email,
       });
+
+      // Store reverse mapping: stripeSubscriptionId → token so the
+      // customer.subscription.deleted handler can find and cancel the token.
+      // Without this, cancelled subscribers retain Pro access for 13 months
+      // (the token's TTL) because the deletion event doesn't carry the token.
+      if (subscriptionIdForMapping) {
+        await storeSubscriptionTokenMapping(subscriptionIdForMapping, subscriptionToken);
+      }
     } else {
       // Redis unavailable — log but do NOT fail the webhook. DB writes already succeeded.
       // The generate route's isProActive() will fall back to querying the subscriptions
@@ -406,6 +421,30 @@ async function handleSubscriptionDeleted(event: Stripe.Event) {
     stripeCustomerId,
     plan: "free",
   });
+
+  // ---- Redis token cancellation (best-effort, AFTER DB writes) ----
+  //
+  // Look up the subscription token via the stripeSubscriptionId → token mapping
+  // stored at checkout time, then mark the token as "cancelled" in Redis.
+  // Without this, the token stays "active" for its 13-month TTL — cancelled
+  // subscribers retain Pro access until the token naturally expires.
+  //
+  // If the mapping doesn't exist (pre-mapping checkout, Redis was unavailable
+  // at checkout time, or mapping TTL expired), the DB writes above already
+  // revoked Pro access via the DB fallback path (isProActiveFromDb checks
+  // subscription status = "active", which is now "canceled").
+  const tokenToCancel = await getTokenForSubscription(deletedSubscription.id);
+  if (tokenToCancel) {
+    await cancelToken(tokenToCancel);
+    console.log("[Stripe Webhook] customer.subscription.deleted — Pro token cancelled in Redis", {
+      subscriptionId: deletedSubscription.id,
+      token: tokenToCancel.slice(0, 8) + "…",
+    });
+  } else {
+    console.log("[Stripe Webhook] customer.subscription.deleted — no token mapping found (pre-mapping checkout or Redis unavailable). DB writes already revoked Pro access.", {
+      subscriptionId: deletedSubscription.id,
+    });
+  }
 }
 
 /**
