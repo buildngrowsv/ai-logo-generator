@@ -471,10 +471,12 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ received: true });
   } catch (webhookProcessingError) {
+    // Return 200 despite the error so Stripe does NOT retry indefinitely.
+    // Code bugs (missing metadata, wrong schema) won't self-fix on retry.
     console.error("Webhook processing error:", webhookProcessingError);
     return NextResponse.json(
-      { error: "Webhook processing failed" },
-      { status: 500 }
+      { received: true, error: "Handler error logged" },
+      { status: 200 }
     );
   }
 }
