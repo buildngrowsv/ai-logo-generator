@@ -60,6 +60,22 @@ const FEATURES = [
   { title: "Instant Results", description: "From business name to finished logo in under 30 seconds. No waiting for designers." },
 ];
 
+const FAQS = [
+  { question: "How do I create a logo with AI?", answer: "Enter your business name and optional tagline, choose a style (modern, vintage, minimalist, bold, playful, etc.), and click 'Generate.' The AI creates multiple unique logo concepts in seconds that you can download immediately." },
+  { question: "Is LogoForge AI free to use?", answer: "Yes — you get 3 free logo generations per day with no account required. For unlimited generations, more styles, and higher resolution downloads, upgrade to Pro starting at $4.99/month." },
+  { question: "What file formats can I download?", answer: "Free tier logos download as high-quality PNG files suitable for web, social media, and presentations. Pro plans include additional format options and higher resolution outputs for print materials." },
+  { question: "Can I use the logo for my business?", answer: "Absolutely. All logos generated with LogoForge AI are yours to use commercially — on websites, business cards, social media, packaging, and more. Pro plans include full commercial licensing." },
+  { question: "How is this different from hiring a designer?", answer: "LogoForge AI generates professional logos in seconds instead of days or weeks. You get instant iterations at a fraction of the cost. Many users start with AI-generated concepts and refine with a designer later if needed." },
+];
+
+const AUDIENCE_LINKS = [
+  { slug: "startups", label: "Startups" },
+  { slug: "freelancers", label: "Freelancers & Solopreneurs" },
+  { slug: "small-businesses", label: "Small Business Owners" },
+  { slug: "content-creators", label: "Content Creators" },
+  { slug: "agencies", label: "Design Agencies" },
+];
+
 export default function GetStartedPage() {
   const breadcrumbJsonLd = {
     "@context": "https://schema.org",

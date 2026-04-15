@@ -209,6 +209,23 @@ const jsonLdFaqPage = {
   ],
 };
 
+
+/**
+ * WebSite JSON-LD — establishes site identity in Google search results
+ * and enables sitelinks searchbox eligibility.
+ */
+const jsonLdWebSite = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: "LogoForge AI",
+  url: "https://generateailogo.com",
+  potentialAction: {
+    "@type": "SearchAction",
+    target: "https://generateailogo.com/?q={search_term_string}",
+    "query-input": "required name=search_term_string",
+  },
+};
+
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" className={`dark ${interFont.variable}`} suppressHydrationWarning>
@@ -228,6 +245,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdOrganization) }}
+        />
+              <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdWebSite) }}
         />
       </head>
       <body className="min-h-screen antialiased">
