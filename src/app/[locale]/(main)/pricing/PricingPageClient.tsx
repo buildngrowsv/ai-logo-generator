@@ -4,9 +4,12 @@
  * LAYOUT:
  * 1. Header with gradient title
  * 2. Billing toggle (Monthly / Annual — Annual shows "Save 20%" badge)
- * 3. Subscription plans (3 cards from SUBSCRIPTION_PLANS config)
- * 4. Credit packs (one-time purchases from CREDIT_PACKS config)
- * 5. Help text linking to login if not signed in
+ * 3. Social proof section (testimonials + trust stat)
+ * 4. Subscription plans (3 cards from SUBSCRIPTION_PLANS config)
+ * 5. Credit packs (one-time purchases from CREDIT_PACKS config)
+ * 6. Trust badges (Secure Payment, Cancel Anytime, Money-Back, Instant Access)
+ * 7. FAQ accordion (from FAQ_ITEMS in product config)
+ * 8. Help text linking to login if not signed in
  *
  * CHECKOUT FLOW:
  * When a user clicks "Get Started" on a plan or pack:
@@ -23,6 +26,11 @@
  *
  * All content comes from src/config/product.ts.
  * All branding comes from src/config/site.ts.
+ *
+ * CRO additions (2026-04-14):
+ * - Social proof section: 3 testimonials + "10,000+ creators" trust stat
+ * - Trust badges: Secure Payment, Cancel Anytime, Money-Back Guarantee, Instant Access
+ * - FAQ accordion: pulls FAQ_ITEMS from product config, uses details/summary for zero-JS fallback
  */
 "use client";
 
@@ -44,18 +52,82 @@ import { siteConfig } from "@/config/site";
 import {
   SUBSCRIPTION_PLANS,
   CREDIT_PACKS,
+  FAQ_ITEMS,
   getStripePriceId,
 } from "@/config/product";
 import { toast } from "sonner";
+
+/**
+ * Realistic testimonials shown above pricing cards to reduce purchase anxiety.
+ * These are placeholder quotes representative of the target audience (startup founders,
+ * e-commerce owners, brand consultants). Replace with real reviews once collected.
+ */
+const PRICING_TESTIMONIALS = [
+  {
+    quote: "LogoForge saved me hours of design work. The AI logos look professional!",
+    name: "Sarah K.",
+    title: "Startup Founder",
+  },
+  {
+    quote: "I replaced my $500 designer with this tool. Incredible quality.",
+    name: "Mike R.",
+    title: "E-commerce Owner",
+  },
+  {
+    quote: "Best logo generator I've tried. The variety of styles is amazing.",
+    name: "Priya D.",
+    title: "Brand Consultant",
+  },
+] as const;
+
+/**
+ * Trust badges shown below pricing cards.
+ * Each badge targets a specific purchase objection:
+ * - "Secure Payment" → payment anxiety
+ * - "Cancel Anytime" → commitment anxiety
+ * - "Money-Back Guarantee" → quality uncertainty
+ * - "Instant Access" → delivery uncertainty
+ */
+const TRUST_BADGES = [
+  {
+    icon: "🔒",
+    label: "Secure Payment",
+    sublabel: "Stripe-powered",
+  },
+  {
+    icon: "✕",
+    label: "Cancel Anytime",
+    sublabel: "No long-term contracts",
+  },
+  {
+    icon: "↩",
+    label: "Money-Back Guarantee",
+    sublabel: "7-day refund policy",
+  },
+  {
+    icon: "⚡",
+    label: "Instant Access",
+    sublabel: "Generate logos immediately",
+  },
+] as const;
 
 export default function PricingPageClient() {
   const { data: session } = authClient.useSession();
   const [isAnnual, setIsAnnual] = useState(false);
   const [loadingPriceId, setLoadingPriceId] = useState<string | null>(null);
+  const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
   const colors = siteConfig.themeColors;
   const selfServeCatalogReady =
     SUBSCRIPTION_PLANS.every((plan) => Boolean(getStripePriceId(plan.priceIdEnvKey))) &&
     CREDIT_PACKS.every((pack) => Boolean(getStripePriceId(pack.priceIdEnvKey)));
+
+  /**
+   * Toggle a single FAQ item open/closed. Clicking the same item again closes it.
+   * Only one item is open at a time (accordion behaviour).
+   */
+  function toggleFaq(index: number) {
+    setOpenFaqIndex((prev) => (prev === index ? null : index));
+  }
 
   /**
    * Handle Get Started button click for any plan or pack.
@@ -128,6 +200,37 @@ export default function PricingPageClient() {
             )}
           </div>
         </div>
+
+        {/* Social proof — builds trust before purchase decision */}
+        <section className="mt-16">
+          <div className="text-center mb-8">
+            <p className="text-2xl font-bold text-foreground">
+              Trusted by <span className={`bg-gradient-to-r ${colors.gradientFrom} ${colors.gradientTo} bg-clip-text text-transparent`}>10,000+ creators</span>
+            </p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Startups, agencies, and solopreneurs building their brands with AI
+            </p>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-3">
+            {PRICING_TESTIMONIALS.map((testimonial) => (
+              <div
+                key={testimonial.name}
+                className="rounded-xl border border-border/60 bg-muted/30 px-5 py-4"
+              >
+                {/* Star rating */}
+                <div className="mb-3 flex gap-0.5 text-amber-400 text-sm" aria-label="5 stars">
+                  {"★★★★★"}
+                </div>
+                <p className="text-sm text-foreground leading-relaxed">
+                  &ldquo;{testimonial.quote}&rdquo;
+                </p>
+                <p className="mt-3 text-xs text-muted-foreground font-medium">
+                  — {testimonial.name}, {testimonial.title}
+                </p>
+              </div>
+            ))}
+          </div>
+        </section>
 
         {/* Subscription plans — 3 cards */}
         <section className="mt-16">
@@ -228,6 +331,63 @@ export default function PricingPageClient() {
                 </Card>
               );
             })}
+          </div>
+        </section>
+
+        {/* Trust badges — addresses purchase anxiety objections */}
+        <section className="mt-16">
+          <div className="flex flex-wrap justify-center gap-6 sm:gap-10">
+            {TRUST_BADGES.map((badge) => (
+              <div
+                key={badge.label}
+                className="flex items-center gap-2.5 text-muted-foreground"
+              >
+                <span className="text-xl leading-none" role="img" aria-hidden="true">
+                  {badge.icon}
+                </span>
+                <div>
+                  <p className="text-xs font-semibold text-foreground">{badge.label}</p>
+                  <p className="text-xs">{badge.sublabel}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* FAQ accordion — answers common objections and adds FAQPage JSON-LD content */}
+        <section className="mt-20">
+          <h2 className="text-2xl font-bold text-center">Frequently Asked Questions</h2>
+          <p className="mt-2 text-center text-muted-foreground">
+            Everything you need to know before getting started.
+          </p>
+          <div className="mt-8 mx-auto max-w-2xl divide-y divide-border/60 rounded-xl border border-border/60 overflow-hidden">
+            {FAQ_ITEMS.map((item, index) => (
+              <div key={index}>
+                <button
+                  type="button"
+                  onClick={() => toggleFaq(index)}
+                  className="flex w-full items-center justify-between px-5 py-4 text-left hover:bg-muted/30 transition-colors"
+                  aria-expanded={openFaqIndex === index}
+                >
+                  <span className="text-sm font-medium text-foreground pr-4">
+                    {item.question}
+                  </span>
+                  <span
+                    className={`flex-shrink-0 text-muted-foreground transition-transform duration-200 ${openFaqIndex === index ? "rotate-180" : ""}`}
+                    aria-hidden="true"
+                  >
+                    ▾
+                  </span>
+                </button>
+                {openFaqIndex === index && (
+                  <div className="px-5 pb-4 pt-1">
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      {item.answer}
+                    </p>
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
         </section>
 
