@@ -118,14 +118,14 @@ const jsonLdSoftwareApp = {
  */
 export const metadata: Metadata = {
   metadataBase: new URL("https://generateailogo.com"),
-  title: "Free AI Logo Generator — Create Professional Logos Instantly | LogoForge",
+  title: "AI Logo Generator Free — Create Professional Logos in Seconds",
   description:
-    "Generate stunning business logos in seconds with AI. Enter your brand name, choose a style, get 10+ unique variations. Free online — no design skills needed.",
+    "Generate custom business logos with AI in under 30 seconds. Enter your brand name, pick a style, get unlimited variations. 3 free logos, no signup. Cheaper than Looka ($20+) or Brandmark ($25+).",
   alternates: {
     canonical: "https://generateailogo.com",
   },
   openGraph: {
-    title: "Free AI Logo Generator — Create Professional Logos Instantly | LogoForge",
+    title: "AI Logo Generator Free — Create Professional Logos in Seconds",
     description:
       "Generate stunning business logos in seconds with AI. Free online — no design skills needed.",
     type: "website",
