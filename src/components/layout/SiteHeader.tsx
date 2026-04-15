@@ -38,10 +38,11 @@ import { useTheme } from "next-themes";
 import { useState } from "react";
 import { siteConfig } from "@/config/site";
 
-function navigationHrefToLabelKey(href: string): "studio" | "gallery" | "pricing" | "dashboard" {
+function navigationHrefToLabelKey(href: string): "studio" | "gallery" | "pricing" | "blog" | "dashboard" {
   if (href.startsWith("/studio")) return "studio";
   if (href.startsWith("/gallery")) return "gallery";
   if (href.startsWith("/pricing")) return "pricing";
+  if (href.startsWith("/blog")) return "blog";
   if (href.startsWith("/dashboard")) return "dashboard";
   return "studio";
 }

@@ -84,6 +84,7 @@ export const siteConfig = {
     { label: "Create Logo", href: "/studio", protected: true },
     { label: "Gallery", href: "/gallery" },
     { label: "Pricing", href: "/pricing" },
+    { label: "Blog", href: "/blog" },
     { label: "Dashboard", href: "/dashboard", protected: true },
   ],
 
