@@ -129,6 +129,57 @@ function buildAudienceFaqJsonLd(
   };
 }
 
+/**
+ * buildAudienceHowToJsonLd — generates HowTo structured data for Google's
+ * rich results on audience pages. Matches "how to use [product] for [audience]"
+ * search intent with step-by-step instructions. Schema spec: https://schema.org/HowTo
+ */
+function buildAudienceHowToJsonLd(
+  productName: string,
+  audienceEntry: (typeof SEO_PAGES_CONFIG.audiences)[number],
+  siteUrl: string
+) {
+  const audienceLower = audienceEntry.name.toLowerCase();
+  return {
+    "@context": "https://schema.org",
+    "@type": "HowTo",
+    name: `How to Use ${productName} for ${audienceEntry.name}`,
+    description: `Step-by-step guide for ${audienceLower} to create professional results with ${productName}.`,
+    totalTime: "PT2M",
+    step: [
+      {
+        "@type": "HowToStep",
+        position: 1,
+        name: "Sign up free",
+        text: `Visit ${siteUrl} and create a free account — no credit card required. ${audienceEntry.name} can start generating immediately.`,
+      },
+      {
+        "@type": "HowToStep",
+        position: 2,
+        name: "Describe what you need",
+        text: `Enter a description of what you want to create. ${productName} understands the specific needs of ${audienceLower}.`,
+      },
+      {
+        "@type": "HowToStep",
+        position: 3,
+        name: "Generate with AI",
+        text: `Click generate and let the AI create professional results in seconds. Review and iterate until you're happy with the output.`,
+      },
+      {
+        "@type": "HowToStep",
+        position: 4,
+        name: "Download and use",
+        text: `Download your result in high resolution. Use it for your projects — commercial use is included with all plans.`,
+      },
+    ],
+    tool: {
+      "@type": "HowToTool",
+      name: productName,
+      url: siteUrl,
+    },
+  };
+}
+
 export default async function AudienceLandingPage({
   params,
 }: AudiencePageProps) {
@@ -141,6 +192,7 @@ export default async function AudienceLandingPage({
 
   const productName = PRODUCT_CONFIG.name;
   const faqJsonLd = buildAudienceFaqJsonLd(productName, audienceEntry);
+  const howToJsonLd = buildAudienceHowToJsonLd(productName, audienceEntry, siteConfig.siteUrl);
 
   /** Other audience pages for internal cross-linking */
   const otherAudiencePages = SEO_PAGES_CONFIG.audiences.filter(
@@ -153,6 +205,12 @@ export default async function AudienceLandingPage({
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+      />
+      {/* JSON-LD HowTo — earns step-by-step rich snippets for
+       * "how to use [product] for [audience]" search queries */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(howToJsonLd) }}
       />
 
             {/* BreadcrumbList JSON-LD — earns breadcrumb rich snippets in Google SERPs */}
