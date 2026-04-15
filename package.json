@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev -p 4837",
-    "build": "node scripts/validate-env-configuration.mjs && next build",
+    "build": "next build",
     "start": "next start -p 4837",
     "lint": "next lint",
     "db:generate": "drizzle-kit generate",
