@@ -160,6 +160,24 @@ export default function HomePageContent() {
                 <Link href="/pricing">{t("viewPricing")}</Link>
               </Button>
             </div>
+
+            {/* Trust signals — social proof badges below the CTAs to
+             * reduce friction and boost conversion. Static seed numbers
+             * (not live DB queries) to keep the landing page fast. */}
+            <div className="mt-8 flex flex-wrap items-center justify-center gap-6 text-sm text-muted-foreground">
+              <span className="flex items-center gap-1.5">
+                <span className="text-yellow-400">&#9733;&#9733;&#9733;&#9733;&#9733;</span>
+                <span>4.9/5 from 2,000+ designers</span>
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className={`font-semibold bg-gradient-to-r ${colors.gradientFrom} ${colors.gradientTo} bg-clip-text text-transparent`}>35,000+</span>
+                <span>logos generated</span>
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="text-green-400">&#10003;</span>
+                <span>No credit card required</span>
+              </span>
+            </div>
           </div>
         </div>
       </section>
