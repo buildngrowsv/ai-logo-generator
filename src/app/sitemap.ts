@@ -45,6 +45,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/looka-alternative",
     "/free-ai-logo-generator",
     "/ai-logo-generator-small-business",
+    "/faq",
     "/privacy",
     "/terms",
   ];
