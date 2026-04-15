@@ -25,10 +25,13 @@ import { BLOG_POSTS } from "@/config/blog-posts";
 const BASE_URL = siteConfig.siteUrl.replace(/\/$/, "");
 
 /**
- * Includes Spanish locale URLs for hreflang coverage (Builder 25, T13).
+ * Includes all 5 locale URLs for hreflang coverage (en/es/fr/de/pt).
+ * Builder 25 (T13) added en+es; Builder 3 (pane1776) expanded to full 5-locale.
  */
 export default function sitemap(): MetadataRoute.Sitemap {
   const lastModified = new Date();
+  const NON_DEFAULT_LOCALES = ["es", "fr", "de", "pt"] as const;
+
   /**
    * Static paths — core app pages that always exist.
    * Dynamic pSEO paths are generated from SEO_PAGES_CONFIG below.
@@ -66,19 +69,27 @@ export default function sitemap(): MetadataRoute.Sitemap {
   ];
   const entries: MetadataRoute.Sitemap = [];
   for (const path of paths) {
+    const languageAlternates: Record<string, string> = {
+      en: `${BASE_URL}${path}`,
+    };
+    for (const loc of NON_DEFAULT_LOCALES) {
+      languageAlternates[loc] = `${BASE_URL}/${loc}${path || ""}`;
+    }
     entries.push({
       url: `${BASE_URL}${path}`,
       lastModified,
       changeFrequency: "weekly",
       priority: path === "" ? 1.0 : 0.85,
-      alternates: { languages: { en: `${BASE_URL}${path}`, es: `${BASE_URL}/es${path || ""}` } },
+      alternates: { languages: languageAlternates },
     });
-    entries.push({
-      url: `${BASE_URL}/es${path || ""}`,
-      lastModified,
-      changeFrequency: "weekly",
-      priority: path === "" ? 0.95 : 0.8,
-    });
+    for (const loc of NON_DEFAULT_LOCALES) {
+      entries.push({
+        url: `${BASE_URL}/${loc}${path || ""}`,
+        lastModified,
+        changeFrequency: "weekly",
+        priority: path === "" ? 0.95 : 0.8,
+      });
+    }
   }
   return entries;
 }
