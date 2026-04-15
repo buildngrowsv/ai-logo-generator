@@ -20,6 +20,7 @@
 import type { MetadataRoute } from "next";
 import { siteConfig } from "@/config/site";
 import { SEO_PAGES_CONFIG } from "@/config/seo-pages";
+import { BLOG_POSTS } from "@/config/blog-posts";
 
 const BASE_URL = siteConfig.siteUrl.replace(/\/$/, "");
 
@@ -38,12 +39,16 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/login",
     "/gallery",
     "/about",
+    "/blog",
     "/looka-alternative",
     "/free-ai-logo-generator",
     "/ai-logo-generator-small-business",
     "/privacy",
     "/terms",
   ];
+
+  /** Blog post paths — each article gets its own sitemap entry */
+  const blogPostPaths = BLOG_POSTS.map((post) => `/blog/${post.slug}`);
 
   /** Programmatic SEO paths — /vs/, /for/, /best/ generated from config */
   const vsPagePaths = SEO_PAGES_CONFIG.competitors.map((c) => `/vs/${c.slug}`);
@@ -53,6 +58,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
   const paths = [
     ...staticPaths,
+    ...blogPostPaths,
     ...vsPagePaths,
     ...forPagePaths,
     ...bestPagePaths,
