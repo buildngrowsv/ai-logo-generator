@@ -1,0 +1,35 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background — dark surface matching the app's dark-first aesthetic -->
+  <rect width="1200" height="630" fill="#09090b"/>
+
+  <defs>
+    <linearGradient id="brandGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#60a5fa"/>
+      <stop offset="50%" stop-color="#3b82f6"/>
+      <stop offset="100%" stop-color="#2563eb"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="45%" r="40%">
+      <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#3b82f6" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Subtle background glow -->
+  <rect width="1200" height="630" fill="url(#glow)"/>
+
+  <!-- Logo icon — stylized diamond/gem shape representing brand creation -->
+  <path d="M580 220 L600 200 L620 220 L600 250 Z" fill="url(#brandGradient)" opacity="0.9"/>
+  <path d="M570 225 L600 195 L630 225 L600 260 Z" stroke="url(#brandGradient)" stroke-width="2" fill="none" opacity="0.4"/>
+
+  <!-- Brand name -->
+  <text x="600" y="330" text-anchor="middle" font-family="Inter, system-ui, -apple-system, sans-serif" font-size="60" font-weight="700" fill="url(#brandGradient)">LogoForge AI</text>
+
+  <!-- Tagline -->
+  <text x="600" y="385" text-anchor="middle" font-family="Inter, system-ui, -apple-system, sans-serif" font-size="24" fill="#94a3b8">AI Logo Generator — Professional Logos in Seconds</text>
+
+  <!-- CTA pill -->
+  <rect x="430" y="415" width="340" height="50" rx="25" fill="url(#brandGradient)"/>
+  <text x="600" y="447" text-anchor="middle" fill="white" font-family="Inter, system-ui, -apple-system, sans-serif" font-size="18" font-weight="600">
+    Try it free — No sign-up needed
+  </text>
+</svg>
