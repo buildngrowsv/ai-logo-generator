@@ -60,6 +60,15 @@ export async function generateStaticParams() {
   }));
 }
 
+
+/** Trim meta description to 155 chars at word boundary for Google SERP. */
+function trimMetaDescription(desc: string, maxLen = 155): string {
+  if (desc.length <= maxLen) return desc;
+  const trimmed = desc.slice(0, maxLen);
+  const lastSpace = trimmed.lastIndexOf(" ");
+  return (lastSpace > 80 ? trimmed.slice(0, lastSpace) : trimmed) + "…";
+}
+
 /**
  * generateMetadata — unique title and description targeting "how to"
  * keywords for each use case. These are high-volume informational
@@ -77,7 +86,7 @@ export async function generateMetadata({
 
   const productName = PRODUCT_CONFIG.name;
   const title = `How to Create ${useCaseEntry.name} with AI — ${productName}`;
-  const description = `${useCaseEntry.description} Step-by-step guide using ${productName}. Try free — no credit card required.`;
+  const description = trimMetaDescription(`${useCaseEntry.description} Step-by-step guide using ${productName}. Try free — no credit card required.`);
   const canonicalUrl = `${siteConfig.siteUrl}/use-cases/${useCaseSlug}`;
 
   return {

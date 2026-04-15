@@ -53,6 +53,15 @@ export async function generateStaticParams() {
   }));
 }
 
+
+/** Trim meta description to 155 chars at word boundary for Google SERP. */
+function trimMetaDescription(desc: string, maxLen = 155): string {
+  if (desc.length <= maxLen) return desc;
+  const trimmed = desc.slice(0, maxLen);
+  const lastSpace = trimmed.lastIndexOf(" ");
+  return (lastSpace > 80 ? trimmed.slice(0, lastSpace) : trimmed) + "…";
+}
+
 /**
  * generateMetadata — unique title and description for each audience page.
  * The title follows the "Best X for Y" keyword pattern that captures
@@ -69,7 +78,7 @@ export async function generateMetadata({
 
   const productName = PRODUCT_CONFIG.name;
   const title = `Best AI Logo Generator for ${audienceEntry.name} — ${productName}`;
-  const description = `${productName} helps ${audienceEntry.name.toLowerCase()} ${audienceEntry.painPoints[0]?.toLowerCase().replace(/\.$/, "") || "create professional logos instantly"}. Try free — no credit card required.`;
+  const description = trimMetaDescription(`${productName} helps ${audienceEntry.name.toLowerCase()} ${audienceEntry.painPoints[0]?.toLowerCase().replace(/\.$/, "") || "create professional logos instantly"}. Try free — no credit card required.`);
   const canonicalUrl = `${siteConfig.siteUrl}/for/${audienceSlug}`;
 
   return {

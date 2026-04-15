@@ -59,6 +59,15 @@ export async function generateStaticParams() {
   }));
 }
 
+
+/** Trim meta description to 155 chars at word boundary for Google SERP. */
+function trimMetaDescription(desc: string, maxLen = 155): string {
+  if (desc.length <= maxLen) return desc;
+  const trimmed = desc.slice(0, maxLen);
+  const lastSpace = trimmed.lastIndexOf(" ");
+  return (lastSpace > 80 ? trimmed.slice(0, lastSpace) : trimmed) + "…";
+}
+
 /**
  * generateMetadata — produces unique title, description, and OG tags
  * for each competitor comparison page. The title template targets the
@@ -75,7 +84,7 @@ export async function generateMetadata({
 
   const productName = PRODUCT_CONFIG.name;
   const title = `${productName} vs ${competitorEntry.name} — Free AI Alternative`;
-  const description = `Compare ${productName} and ${competitorEntry.name} side by side. See features, pricing, and why ${productName} is the better choice for most users. Try free today.`;
+  const description = trimMetaDescription(`Compare ${productName} and ${competitorEntry.name} side by side. See features, pricing, and why ${productName} is the better choice for most users. Try free today.`);
   const canonicalUrl = `${siteConfig.siteUrl}/vs/${competitorSlug}`;
 
   return {
