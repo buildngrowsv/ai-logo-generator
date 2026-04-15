@@ -120,6 +120,20 @@ export const SEO_PAGES_CONFIG: SeoPageConfig = {
         "Lower resolution outputs compared to dedicated AI logo generators",
       ],
     },
+    {
+      slug: "logomakr",
+      name: "LogoMakr",
+      description:
+        "LogoMakr is a free web-based drag-and-drop logo editor. Users manually select icons from a clip-art library, add text, and arrange elements. No AI generation — every logo is manually assembled.",
+      pricing: "Free low-res; $19 one-time per high-resolution download",
+      weaknesses: [
+        "No AI generation — every logo requires 20-40 minutes of manual assembly",
+        "High-resolution downloads cost $19 per logo — no subscription option",
+        "Shared icon library means logos look similar across thousands of businesses",
+        "Dated interface and clip-art aesthetic, last meaningfully updated around 2015",
+        "Requires design intuition for icon pairing, font selection, and color harmony",
+      ],
+    },
   ],
 
   audiences: [

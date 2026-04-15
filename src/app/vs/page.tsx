@@ -89,6 +89,17 @@ const COMPARISONS = [
       "Free credits + $4.90/mo Pro",
     ],
   },
+  {
+    slug: "logomakr",
+    name: "LogoMakr",
+    tagline:
+      "AI-generated unique logos in 30 seconds vs LogoMakr's manual drag-and-drop editor",
+    highlights: [
+      "AI generation vs manual icon assembly",
+      "Free hi-res vs $19/download on LogoMakr",
+      "$4.90/mo unlimited vs per-download pricing",
+    ],
+  },
 ];
 
 // ---------------------------------------------------------------------------
