@@ -134,6 +134,111 @@ export default async function RootHomePage() {
         <LanguageSwitcher locale="en" />
         <HomePageContent />
       </NextIntlClientProvider>
+
+      {/* ================================================================
+       * PRICING CTA SECTION
+       * ================================================================
+       * Server-rendered pricing summary so visitors who don't scroll
+       * through the client component still see the value proposition.
+       * Three tiers matching softwareAppJsonLd offers above.
+       * ================================================================ */}
+      <section className="py-20 px-4 sm:px-6 bg-surface-primary">
+        <div className="max-w-5xl mx-auto space-y-12">
+          <div className="text-center space-y-4">
+            <h2 className="text-3xl sm:text-4xl font-bold text-text-primary">
+              Simple, Transparent Pricing
+            </h2>
+            <p className="text-text-secondary text-lg max-w-2xl mx-auto">
+              Try 3 logos free — no account required. Upgrade for more credits.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-6">
+            {/* STARTER */}
+            <div className="rounded-2xl border border-white/5 bg-surface-secondary p-8 space-y-6">
+              <div>
+                <h3 className="text-xl font-semibold text-text-primary">Starter</h3>
+                <div className="mt-2">
+                  <span className="text-4xl font-bold text-text-primary">$4.90</span>
+                  <span className="text-text-muted ml-1">/month</span>
+                </div>
+              </div>
+              <ul className="space-y-3">
+                {["50 logo credits per month", "All AI models", "High-resolution PNG", "Commercial license", "No watermarks"].map((f) => (
+                  <li key={f} className="flex items-start gap-2 text-text-secondary text-sm">
+                    <span className="text-green-400 mt-0.5 shrink-0">&#10003;</span>
+                    {f}
+                  </li>
+                ))}
+              </ul>
+              <a
+                href="/pricing"
+                className="block w-full text-center py-3 rounded-xl border border-white/10 text-text-secondary hover:text-text-primary hover:border-brand-500/40 transition-all duration-300 font-medium"
+              >
+                Get Started
+              </a>
+            </div>
+
+            {/* CREATOR — best value */}
+            <div className="relative rounded-2xl border-2 border-brand-500/50 bg-surface-secondary p-8 space-y-6 shadow-lg shadow-brand-500/10">
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-brand-600 text-white text-xs font-bold px-3 py-1 rounded-full">
+                BEST VALUE
+              </div>
+              <div>
+                <h3 className="text-xl font-semibold text-text-primary">Creator</h3>
+                <div className="mt-2">
+                  <span className="text-4xl font-bold text-text-primary">$14.90</span>
+                  <span className="text-text-muted ml-1">/month</span>
+                </div>
+              </div>
+              <ul className="space-y-3">
+                {["200 logo credits per month", "All AI models", "High-resolution PNG", "Commercial license", "Priority processing", "No watermarks"].map((f) => (
+                  <li key={f} className="flex items-start gap-2 text-text-secondary text-sm">
+                    <span className="text-green-400 mt-0.5 shrink-0">&#10003;</span>
+                    {f}
+                  </li>
+                ))}
+              </ul>
+              <a
+                href="/pricing"
+                className="block w-full text-center py-3.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-semibold transition-all duration-200 hover:scale-[1.02]"
+              >
+                Start Creating
+              </a>
+            </div>
+
+            {/* AGENCY */}
+            <div className="rounded-2xl border border-white/5 bg-surface-secondary p-8 space-y-6">
+              <div>
+                <h3 className="text-xl font-semibold text-text-primary">Agency</h3>
+                <div className="mt-2">
+                  <span className="text-4xl font-bold text-text-primary">$39.90</span>
+                  <span className="text-text-muted ml-1">/month</span>
+                </div>
+              </div>
+              <ul className="space-y-3">
+                {["500 logo credits per month", "All AI models", "High-resolution PNG", "Commercial license", "Priority processing", "Team-ready volume"].map((f) => (
+                  <li key={f} className="flex items-start gap-2 text-text-secondary text-sm">
+                    <span className="text-green-400 mt-0.5 shrink-0">&#10003;</span>
+                    {f}
+                  </li>
+                ))}
+              </ul>
+              <a
+                href="/pricing"
+                className="block w-full text-center py-3 rounded-xl border border-white/10 text-text-secondary hover:text-text-primary hover:border-brand-500/40 transition-all duration-300 font-medium"
+              >
+                Scale Up
+              </a>
+            </div>
+          </div>
+
+          <p className="text-center text-text-muted text-sm">
+            3 free logos included — no credit card needed to start.
+          </p>
+        </div>
+      </section>
+
       {/* Internal SEO links — distributes homepage PageRank to pSEO pages */}
       <section className="py-12 px-6 border-t border-white/5">
         <div className="max-w-5xl mx-auto">
