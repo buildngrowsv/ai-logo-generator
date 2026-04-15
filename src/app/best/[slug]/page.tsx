@@ -27,6 +27,7 @@ import { SEO_PAGES_CONFIG } from "@/config/seo-pages";
 import { PRODUCT_CONFIG } from "@/lib/config";
 import { siteConfig } from "@/config/site";
 import { SeoInternalLinks } from "@/components/SeoInternalLinks";
+import { SeoCrossLinks } from "@/components/SeoCrossLinks";
 
 import { BreadcrumbJsonLd } from "@/components/BreadcrumbJsonLd";
 interface BestPageProps {
@@ -336,6 +337,8 @@ export default async function BestPage({ params }: BestPageProps) {
             </section>
 
             {/* Internal Links — all SEO page categories */}
+            {/* Cross-category links */}
+            <SeoCrossLinks currentCategory="best" currentSlug={slug} />
             <SeoInternalLinks />
           </div>
         </div>

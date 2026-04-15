@@ -33,7 +33,7 @@ import { PRODUCT_CONFIG } from "@/lib/config";
  */
 export function SeoInternalLinks() {
   const productName = PRODUCT_CONFIG.name;
-  const { competitors, audiences, useCases } = SEO_PAGES_CONFIG;
+  const { competitors, audiences, useCases, bestPages } = SEO_PAGES_CONFIG;
 
   /**
    * Only render if there are SEO pages to link to. If the config is
@@ -41,7 +41,7 @@ export function SeoInternalLinks() {
    * entirely to avoid rendering an empty shell.
    */
   const hasAnyPages =
-    competitors.length > 0 || audiences.length > 0 || useCases.length > 0;
+    competitors.length > 0 || audiences.length > 0 || useCases.length > 0 || bestPages.length > 0;
 
   if (!hasAnyPages) return null;
 
@@ -51,7 +51,7 @@ export function SeoInternalLinks() {
         Explore More
       </h3>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
         {/* Comparisons column — /vs/ pages */}
         {competitors.length > 0 && (
           <div>
@@ -108,6 +108,27 @@ export function SeoInternalLinks() {
                     className="text-sm text-text-muted hover:text-brand-400 transition-colors"
                   >
                     {useCaseEntry.name}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {/* Best Of column — /best/ pages */}
+        {bestPages.length > 0 && (
+          <div>
+            <p className="text-sm font-medium text-text-secondary mb-3">
+              Best Of
+            </p>
+            <ul className="space-y-2">
+              {bestPages.map((bestPageEntry) => (
+                <li key={bestPageEntry.slug}>
+                  <Link
+                    href={\`/best/\${bestPageEntry.slug}\`}
+                    className="text-sm text-text-muted hover:text-brand-400 transition-colors"
+                  >
+                    {bestPageEntry.title}
                   </Link>
                 </li>
               ))}
