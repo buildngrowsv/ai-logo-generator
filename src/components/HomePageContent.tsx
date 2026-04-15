@@ -216,6 +216,54 @@ export default function HomePageContent() {
       </section>
 
       {/* ============================================================
+       * HOW IT WORKS
+       * Three-step CRO section explaining the user journey.
+       * Reduces bounce rate by setting clear expectations and making
+       * the product feel approachable to first-time visitors.
+       * Pattern: Describe → AI Generates → Download
+       * ============================================================ */}
+      <section className="container mx-auto max-w-6xl px-4 py-20">
+        <h2 className="text-center text-3xl font-bold tracking-tight sm:text-4xl">
+          How It Works
+        </h2>
+        <p className="mx-auto mt-4 max-w-2xl text-center text-muted-foreground">
+          Create a professional logo in three simple steps — no design skills needed.
+        </p>
+        <div className="mt-16 grid gap-8 sm:grid-cols-3">
+          {/* Step 1 */}
+          <div className="relative text-center">
+            <div className={`mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br ${colors.accentBackground} text-2xl font-bold ${colors.accentText}`}>
+              1
+            </div>
+            <h3 className="mt-6 text-lg font-semibold">Describe Your Logo</h3>
+            <p className="mt-3 text-sm text-muted-foreground">
+              Enter your brand name and describe the style you want — modern, vintage, minimalist, playful, or anything else you can imagine.
+            </p>
+          </div>
+          {/* Step 2 */}
+          <div className="relative text-center">
+            <div className={`mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br ${colors.accentBackground} text-2xl font-bold ${colors.accentText}`}>
+              2
+            </div>
+            <h3 className="mt-6 text-lg font-semibold">AI Generates Options</h3>
+            <p className="mt-3 text-sm text-muted-foreground">
+              Our AI creates multiple unique logo concepts in seconds. Each one is original and tailored to your description.
+            </p>
+          </div>
+          {/* Step 3 */}
+          <div className="relative text-center">
+            <div className={`mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br ${colors.accentBackground} text-2xl font-bold ${colors.accentText}`}>
+              3
+            </div>
+            <h3 className="mt-6 text-lg font-semibold">Download &amp; Use</h3>
+            <p className="mt-3 text-sm text-muted-foreground">
+              Pick your favorite, download in high resolution, and use it on your website, social media, business cards, and more.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* ============================================================
        * FEATURES GRID
        * Six feature cards in a responsive grid.
        * Content comes from PRODUCT_FEATURES in product.ts.
