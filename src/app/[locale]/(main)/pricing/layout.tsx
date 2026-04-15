@@ -3,18 +3,21 @@ import { FAQ_ITEMS } from "@/config/product";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://generateailogo.com";
 
-export const metadata: Metadata = {
-  title: "Pricing — LogoForge AI | Free & Pro Plans",
-  description:
-    "Compare LogoForge AI pricing plans. Start free with daily generations or upgrade to Pro for unlimited AI logo generation, priority processing, and commercial usage rights.",
-  alternates: { canonical: `${APP_URL}/pricing` },
-  openGraph: {
-    title: "Pricing — LogoForge AI",
+/* async generateMetadata forces Next.js to flush metadata in SSR when parent layout also uses generateMetadata */
+export async function generateMetadata(): Promise<Metadata> {
+  return {
+    title: "Pricing — LogoForge AI | Free & Pro Plans",
     description:
-      "See LogoForge AI pricing. Free plan to try AI logo generation, Pro plan for unlimited use and commercial rights.",
-    url: `${APP_URL}/pricing`,
-  },
-};
+      "Compare LogoForge AI pricing plans. Start free with daily generations or upgrade to Pro for unlimited AI logo generation, priority processing, and commercial usage rights.",
+    alternates: { canonical: `${APP_URL}/pricing` },
+    openGraph: {
+      title: "Pricing — LogoForge AI",
+      description:
+        "See LogoForge AI pricing. Free plan to try AI logo generation, Pro plan for unlimited use and commercial rights.",
+      url: `${APP_URL}/pricing`,
+    },
+  };
+}
 
 /**
  * SoftwareApplication + Offer JSON-LD — enables Google rich snippets showing

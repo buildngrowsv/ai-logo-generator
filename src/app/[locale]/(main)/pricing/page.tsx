@@ -23,21 +23,33 @@ import PricingPageClient from "./PricingPageClient";
 
 const SITE_URL = process.env.NEXT_PUBLIC_APP_URL?.trim() || "https://generateailogo.com";
 
-export const metadata: Metadata = {
-  title: "AI Logo Generator Pricing — Free & Pro Plans | LogoForge",
-  description:
-    "Start free — generate 3 logos daily. Upgrade to Pro for unlimited AI logos, commercial license, and high-res downloads. No credit card required.",
-  alternates: {
-    canonical: `${SITE_URL}/pricing`,
-  },
-  openGraph: {
+/**
+ * async generateMetadata (not static export const metadata).
+ *
+ * WHY: When the parent [locale]/layout.tsx uses async generateMetadata(),
+ * Next.js RSC streaming does not reliably flush CHILD page static metadata
+ * exports into initial HTML. Googlebot sees the parent layout's title instead
+ * of the pricing-specific title. Converting to async forces Next.js to resolve
+ * this page's metadata during SSR, so /pricing gets its own <title> and
+ * <meta description> in the initial HTML response.
+ */
+export async function generateMetadata(): Promise<Metadata> {
+  return {
     title: "AI Logo Generator Pricing — Free & Pro Plans | LogoForge",
     description:
       "Start free — generate 3 logos daily. Upgrade to Pro for unlimited AI logos, commercial license, and high-res downloads. No credit card required.",
-    url: `${SITE_URL}/pricing`,
-    type: "website",
-  },
-};
+    alternates: {
+      canonical: `${SITE_URL}/pricing`,
+    },
+    openGraph: {
+      title: "AI Logo Generator Pricing — Free & Pro Plans | LogoForge",
+      description:
+        "Start free — generate 3 logos daily. Upgrade to Pro for unlimited AI logos, commercial license, and high-res downloads. No credit card required.",
+      url: `${SITE_URL}/pricing`,
+      type: "website",
+    },
+  };
+}
 
 /**
  * BreadcrumbList JSON-LD — helps Google display breadcrumb navigation
