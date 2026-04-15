@@ -25,18 +25,16 @@ import PricingPageClient from "./PricingPageClient";
 const SITE_URL = process.env.NEXT_PUBLIC_APP_URL?.trim() || "https://generateailogo.com";
 
 export const metadata: Metadata = {
-  title: "Pricing | LogoForge AI — Free & Pro Plans",
+  title: "AI Logo Generator Pricing — Free & Pro Plans | LogoForge",
   description:
-    "Compare LogoForge AI pricing plans. Start free with 3 logo generations, " +
-    "then upgrade for unlimited AI logo creation. Affordable plans starting at $4.90/month.",
+    "Start free — generate 3 logos daily. Upgrade to Pro for unlimited AI logos, commercial license, and high-res downloads. No credit card required.",
   alternates: {
     canonical: `${SITE_URL}/pricing`,
   },
   openGraph: {
-    title: "Pricing | LogoForge AI — Free & Pro Plans",
+    title: "AI Logo Generator Pricing — Free & Pro Plans | LogoForge",
     description:
-      "Compare LogoForge AI pricing plans. Start free with 3 logo generations, " +
-      "then upgrade for unlimited AI logo creation.",
+      "Start free — generate 3 logos daily. Upgrade to Pro for unlimited AI logos, commercial license, and high-res downloads. No credit card required.",
     url: `${SITE_URL}/pricing`,
     type: "website",
   },
