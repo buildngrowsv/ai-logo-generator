@@ -59,8 +59,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const bestPagePaths = SEO_PAGES_CONFIG.bestPages.map((b) => `/best/${b.slug}`);
   const useCasePagePaths = SEO_PAGES_CONFIG.useCases.map((u) => `/use-cases/${u.slug}`);
 
+  /** pSEO hub pages — parent indices for content clusters */
+  const hubPaths = ["/vs", "/for", "/use-cases", "/best", "/get-started"];
+
   const paths = [
     ...staticPaths,
+    ...hubPaths,
     ...blogPostPaths,
     ...vsPagePaths,
     ...forPagePaths,
