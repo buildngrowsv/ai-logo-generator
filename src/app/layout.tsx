@@ -15,7 +15,7 @@
  * =============================================================================
  */
 import type { ReactNode } from "react";
-import type { Viewport } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const viewport: Viewport = {
@@ -81,6 +81,35 @@ const jsonLdSoftwareApp = {
     "Commercial use rights included",
     "No design skills required",
   ],
+};
+
+/**
+ * Root-level metadata — ensures every page (including root page.tsx) has a
+ * <title> and canonical in SSR HTML. The [locale]/layout.tsx generateMetadata
+ * overrides these for locale-routed pages, but pages served directly from
+ * the root (e.g. during middleware bypass) need this fallback.
+ *
+ * FIX (2026-04-15, Coordinator 1): Production curl showed no <title> tag —
+ * root layout had no metadata export, and root page.tsx was being served
+ * without going through the [locale] layout.
+ */
+export const metadata: Metadata = {
+  metadataBase: new URL("https://generateailogo.com"),
+  title: "AI Logo Generator — Create Professional Logos with AI | LogoForge",
+  description:
+    "Create professional logos in seconds using AI. Enter your business name, pick a style, and get multiple logo variations. Free to try — no sign-up required.",
+  alternates: {
+    canonical: "https://generateailogo.com",
+  },
+  openGraph: {
+    title: "AI Logo Generator — Create Professional Logos with AI | LogoForge",
+    description:
+      "Create professional logos in seconds using AI. Free to try — no sign-up required.",
+    type: "website",
+    url: "https://generateailogo.com",
+    siteName: "LogoForge AI",
+  },
+  robots: { index: true, follow: true },
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
