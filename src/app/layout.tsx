@@ -155,6 +155,9 @@ const jsonLdOrganization = {
     contactType: "customer support",
     url: "https://generateailogo.com/contact",
   },
+  sameAs: [
+    "https://symplyai.io",
+  ],
 };
 
 /**
