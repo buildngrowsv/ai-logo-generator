@@ -3,7 +3,9 @@
   "buildCommand": "next build",
   "outputDirectory": ".next",
   "installCommand": "npm install --legacy-peer-deps",
-  "regions": ["iad1"],
+  "regions": [
+    "iad1"
+  ],
   "headers": [
     {
       "source": "/api/stripe/webhook",
@@ -19,6 +21,11 @@
   "functions": {
     "src/app/api/stripe/webhook/route.ts": {
       "maxDuration": 30
+    }
+  },
+  "git": {
+    "deploymentEnabled": {
+      "main": false
     }
   }
 }
